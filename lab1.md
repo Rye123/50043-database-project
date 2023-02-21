@@ -60,7 +60,7 @@ doesn't yet work. As you complete parts of the lab, you will work towards passin
 
 If you wish to write new unit tests as you code, they should be added to the <tt>test/simpledb</tt> directory.
 
-<p>For more details about how to use Ant, see the [manual](http://ant.apache.org/manual/). The [Running Ant](http://ant.apache.org/manual/running.html) section provides details about using the `ant` command. However, the quick reference table below should be sufficient for working on the labs.
+For more details about how to use Ant, see the [manual](http://ant.apache.org/manual/). The [Running Ant](http://ant.apache.org/manual/running.html) section provides details about using the `ant` command. However, the quick reference table below should be sufficient for working on the labs.
 
 Command | Description
 --- | ---
@@ -100,7 +100,7 @@ $ ant systemtest
  ... more error messages ...
 ```
 
-<p>This indicates that this test failed, showing the stack trace where the error was detected. To debug, start by reading the source code where the error occurred. When the tests pass, you will see something like the following:
+This indicates that this test failed, showing the stack trace where the error was detected. To debug, start by reading the source code where the error occurred. When the tests pass, you will see something like the following:
 
 ```
 $ ant systemtest
@@ -155,13 +155,13 @@ of columns in the file.
 Before beginning to write code, we **strongly encourage** you to read through this entire document to get a feel for the
 high-level design of SimpleDB.
 
-<p>
+
 
 You will need to fill in any piece of code that is not implemented. It will be obvious where we think you should write
 code. You may need to add private methods and/or helper classes. You may change APIs, but make sure
 our grading tests still run and make sure to mention, explain, and defend your decisions in your writeup.
 
-<p>
+
 
 In addition to the methods that you need to fill out for this lab, the class interfaces contain numerous methods that
 you need not implement until subsequent labs. These will either be indicated per class:
@@ -183,7 +183,7 @@ public boolean deleteTuple(Tuple t)throws DbException{
 
 The code that you submit should compile without having to modify these methods.
 
-<p>
+
 
 We suggest exercises along this document to guide your implementation, but you may find that a different order makes
 more sense for you.
@@ -238,7 +238,7 @@ does not have:
 * Data types except integers and fixed length strings.
 * (In this lab) Indices.
 
-<p>
+
 
 In the rest of this Section, we describe each of the main components of SimpleDB that you will need to implement in this
 lab. You should use the exercises in this discussion to guide your implementation. This document is by no means a
@@ -246,7 +246,7 @@ complete specification for SimpleDB; you will need to make decisions about how t
 the system. Note that for Lab 1 you do not need to implement any operators (e.g., select, join, project) except
 sequential scan. You will add support for additional operators in future labs.
 
-<p>
+
 
 ### 2.1. The Database Class
 
@@ -258,7 +258,7 @@ file as you will need to access these objects.
 
 ### 2.2. Fields and Tuples
 
-<p>Tuples in SimpleDB are quite basic.  They consist of a collection of `Field` objects, one per field in the `Tuple`. `Field` is an interface that different data types (e.g., integer, string) implement.  `Tuple` objects are created by the underlying access methods (e.g., heap files, or B-trees), as described in the next section.  Tuples also have a type (or schema), called a _tuple descriptor_, represented by a `TupleDesc` object.  This object consists of a collection of `Type` objects, one per field in the tuple, each of which describes the type of the corresponding field.
+Tuples in SimpleDB are quite basic.  They consist of a collection of `Field` objects, one per field in the `Tuple`. `Field` is an interface that different data types (e.g., integer, string) implement.  `Tuple` objects are created by the underlying access methods (e.g., heap files, or B-trees), as described in the next section.  Tuples also have a type (or schema), called a _tuple descriptor_, represented by a `TupleDesc` object.  This object consists of a collection of `Type` objects, one per field in the tuple, each of which describes the type of the corresponding field.
 
 ### Exercise 1
 
@@ -298,7 +298,7 @@ At this point, your code should pass the unit tests in CatalogTest.
 
 ### 2.4. BufferPool
 
-<p>The buffer pool (class `BufferPool` in SimpleDB) is responsible for caching pages in memory that have been recently read from disk. All operators read and write pages from various files on disk through the buffer pool. It consists of a fixed number of pages, defined by the `numPages` parameter to the `BufferPool` constructor. In later labs, you will implement an eviction policy. For this lab, you only need to implement the constructor and the `BufferPool.getPage()` method used by the SeqScan operator. The BufferPool should store up to `numPages` pages. For this lab, if more than `numPages` requests are made for different pages, then instead of implementing an eviction policy, you may throw a DbException. In future labs you will be required to implement an eviction policy.
+The buffer pool (class `BufferPool` in SimpleDB) is responsible for caching pages in memory that have been recently read from disk. All operators read and write pages from various files on disk through the buffer pool. It consists of a fixed number of pages, defined by the `numPages` parameter to the `BufferPool` constructor. In later labs, you will implement an eviction policy. For this lab, you only need to implement the constructor and the `BufferPool.getPage()` method used by the SeqScan operator. The BufferPool should store up to `numPages` pages. For this lab, if more than `numPages` requests are made for different pages, then instead of implementing an eviction policy, you may throw a DbException. In future labs you will be required to implement an eviction policy.
 
 The `Database` class provides a static method, `Database.getBufferPool()`, that returns a reference to the single
 BufferPool instance for the entire SimpleDB process.
@@ -324,7 +324,7 @@ policy is up to you; it is not necessary to do something sophisticated.
 -->
 
 <!--
-<p>
+
 
 Notice that `BufferPool` asks you to implement
 a `flush_all_pages()` method.  This is not something you would ever
@@ -339,7 +339,7 @@ Access methods provide a way to read or write data from disk that is arranged in
 include heap files (unsorted files of tuples) and B-trees; for this assignment, you will only implement a heap file
 access method, and we have written some of the code for you.
 
-<p>
+
 
 A `HeapFile` object is arranged into a set of pages, each of which consists of a fixed number of bytes for storing
 tuples, (defined by the constant `BufferPool.DEFAULT_PAGE_SIZE`), including a header. In SimpleDB, there is
@@ -350,41 +350,41 @@ tuple is 1, it indicates that the tuple is valid; if it is 0, the tuple is inval
 initialized.)  Pages of `HeapFile` objects are of type `HeapPage` which implements the `Page` interface. Pages are
 stored in the buffer pool but are read and written by the `HeapFile` class.
 
-<p>
+
 
 SimpleDB stores heap files on disk in more or less the same format they are stored in memory. Each file consists of page
 data arranged consecutively on disk. Each page consists of one or more bytes representing the header, followed by the _
 page size_ bytes of actual page content. Each tuple requires _tuple size_ * 8 bits for its content and 1 bit for the
 header. Thus, the number of tuples that can fit in a single page is:
 
-<p>
+
 
 `
 _tuples per page_ = floor((_page size_ * 8) / (_tuple size_ * 8 + 1))
 `
 
-<p>
+
 
 Where _tuple size_ is the size of a tuple in the page in bytes. The idea here is that each tuple requires one additional
 bit of storage in the header. We compute the number of bits in a page (by mulitplying page size by 8), and divide this
 quantity by the number of bits in a tuple (including this extra header bit) to get the number of tuples per page. The
 floor operation rounds down to the nearest integer number of tuples (we don't want to store partial tuples on a page!)
 
-<p>
+
 
 Once we know the number of tuples per page, the number of bytes required to store the header is simply:
-<p>
+
 
 `
 headerBytes = ceiling(tupsPerPage/8)
 `
 
-<p>
+
 
 The ceiling operation rounds up to the nearest integer number of bytes (we never store less than a full byte of header
 information.)
 
-<p>
+
 
 The low (least significant) bits of each byte represents the status of the slots that are earlier in the file. Hence,
 the lowest bit of the first byte represents whether or not the first slot in the page is in use. The second lowest bit
@@ -393,7 +393,7 @@ high-order bits of the last byte may not correspond to a slot that is actually i
 may not be a multiple of 8. Also note that all Java virtual machines
 are [big-endian](http://en.wikipedia.org/wiki/Endianness).
 
-<p>
+
 
 ### Exercise 4
 
@@ -418,7 +418,7 @@ structure.
 At this point, your code should pass the unit tests in HeapPageIdTest, RecordIdTest, and HeapPageReadTest.
 
 
-<p> 
+ 
 
 After you have implemented <tt>HeapPage</tt>, you will write methods for <tt>HeapFile</tt> in this lab to calculate the
 number of pages in a file and to read a page from the file. You will then be able to fetch tuples from a file stored on
@@ -438,10 +438,10 @@ To read a page from disk, you will first need to calculate the correct offset in
 access to the file in order to read and write pages at arbitrary offsets. You should not call BufferPool methods when
 reading a page from disk.
 
-<p> 
+ 
 You will also need to implement the `HeapFile.iterator()` method, which should iterate through the tuples of each page in the HeapFile. The iterator must use the `BufferPool.getPage()` method to access pages in the `HeapFile`. This method loads the page into the buffer pool and will eventually be used (in a later lab) to implement locking-based concurrency control and recovery.  Do not load the entire table into memory on the open() call -- this will cause an out of memory error for very large tables.
 
-<p>
+
 
 At this point, your code should pass the unit tests in HeapFileReadTest.
 
@@ -450,20 +450,20 @@ At this point, your code should pass the unit tests in HeapFileReadTest.
 Operators are responsible for the actual execution of the query plan. They implement the operations of the relational
 algebra. In SimpleDB, operators are iterator based; each operator implements the `DbIterator` interface.
 
-<p>
+
 
 Operators are connected together into a plan by passing lower-level operators into the constructors of higher-level
 operators, i.e., by 'chaining them together.' Special access method operators at the leaves of the plan are responsible
 for reading data from the disk (and hence do not have any operators below them).
 
-<p>
+
 
 At the top of the plan, the program interacting with SimpleDB simply calls `getNext` on the root operator; this operator
 then calls `getNext` on its children, and so on, until these leaf operators are called. They fetch tuples from disk and
 pass them up the tree (as return arguments to `getNext`); tuples propagate up the plan in this way until they are output
 at the root or combined or rejected by another operator in the plan.
 
-<p>
+
 
 <!--
 For plans that implement `INSERT` and `DELETE` queries,
@@ -472,7 +472,7 @@ operator that modifies the pages on disk.  These operators return a tuple
 containing the count of the number of affected tuples to the user-level
 program.
 
-<p>
+
 -->
 
 For this lab, you will only need to implement one SimpleDB operator.
@@ -489,7 +489,7 @@ For this lab, you will only need to implement one SimpleDB operator.
 This operator sequentially scans all of the tuples from the pages of the table specified by the `tableid` in the
 constructor. This operator should access tuples through the `DbFile.iterator()` method.
 
-<p>At this point, you should be able to complete the ScanTest system test. Good work!
+At this point, you should be able to complete the ScanTest system test. Good work!
 
 You will fill in other operators in subsequent labs.
 
@@ -508,13 +508,13 @@ Suppose you have a data file, "some_data_file.txt", with the following contents:
 3,4,4
 ```
 
-<p>
+
 You can convert this into a binary file that SimpleDB can query as follows:
-<p>
+
 ```java -jar dist/simpledb.jar convert some_data_file.txt 3```
-<p>
+
 Here, the argument "3" tells conver that the input has 3 columns.
-<p>
+
 The following code implements a simple selection query over this file. This code is equivalent to the SQL statement `SELECT * FROM some_data_file`.
 
 ```
