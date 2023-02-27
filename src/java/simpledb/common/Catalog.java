@@ -25,7 +25,7 @@ public class Catalog {
     /**
      * Associates a table's ID (from DbFile.getId()) with the table.
      */
-    private HashMap<Integer, Table> tables;
+    private ConcurrentHashMap<Integer, Table> tables;
     
     /**
      * The Table has:
@@ -69,7 +69,7 @@ public class Catalog {
      */
     public Catalog() {
         // some code goes here
-        tables = new HashMap<>();
+        tables = new ConcurrentHashMap<>();
     }
 
     /**
@@ -82,13 +82,16 @@ public class Catalog {
      * @param pkeyField the name of the primary key field
      */
     public void addTable(DbFile file, String name, String pkeyField) {
-        // loop to check if there exists a table with the same name or ID
         int newTableId = file.getId();
+        // loop to check if there exists a table with the same name or ID
         for (Map.Entry<Integer, Table> tableEntry : tables.entrySet()) {
             int tableId = tableEntry.getKey();
             Table table = tableEntry.getValue();
-            if (tableId == newTableId || table.name.equals(name))
-                this.tables.replace(newTableId, new Table(file, name, pkeyField));
+
+            // remove an old table if it has the same ID or name
+            if (tableId == newTableId || table.name.equals(name)) {
+                this.tables.remove(tableId);
+            }
         }
         this.tables.put(newTableId, new Table(file, name, pkeyField));
     }
@@ -161,7 +164,7 @@ public class Catalog {
     
     /** Delete all tables from the catalog */
     public void clear() {
-        tables = new HashMap<>();
+        tables.clear();
     }
     
     /**
