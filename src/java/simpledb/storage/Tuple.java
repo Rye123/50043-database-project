@@ -1,6 +1,7 @@
 package simpledb.storage;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 
@@ -14,6 +15,7 @@ public class Tuple implements Serializable {
     private static final long serialVersionUID = 1L;
     private TupleDesc td;
     private RecordId recordId;
+    private ArrayList<Field> fields;
     /**
      * Create a new tuple with the specified schema (type).
      *
@@ -25,6 +27,13 @@ public class Tuple implements Serializable {
         // some code goes here
         this.td = td;
         this.recordId = null;
+        this.fields = new ArrayList<>(td.numFields());
+
+        // add the empty fields
+        //TODO: should we take the type of field into consideration?
+        for (int i = 0; i < td.numFields(); i++) {
+            this.fields.add(null);
+        }
     }
 
     /**
@@ -67,6 +76,7 @@ public class Tuple implements Serializable {
      */
     public void setField(int i, Field f) {
         // some code goes here
+        this.fields.set(i, f);
     }
 
     /**
@@ -77,7 +87,7 @@ public class Tuple implements Serializable {
      */
     public Field getField(int i) {
         // some code goes here
-        return null;
+        return this.fields.get(i);
     }
 
     /**
@@ -89,8 +99,13 @@ public class Tuple implements Serializable {
      * where \t is any whitespace (except a newline)
      */
     public String toString() {
-        // some code goes here
-        throw new UnsupportedOperationException("Implement this");
+        ArrayList<String> cols = new ArrayList<>();
+        if (fields.size() == 0)
+            return "";
+        for (Field field : fields) {
+            cols.add(field.toString() + "\t");
+        }
+        return String.join("\t", cols);
     }
 
     /**
@@ -100,7 +115,7 @@ public class Tuple implements Serializable {
     public Iterator<Field> fields()
     {
         // some code goes here
-        return null;
+        return fields.iterator();
     }
 
     /**
@@ -109,5 +124,6 @@ public class Tuple implements Serializable {
     public void resetTupleDesc(TupleDesc td)
     {
         // some code goes here
+        this.td = td;
     }
 }
