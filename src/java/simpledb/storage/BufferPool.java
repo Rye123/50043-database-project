@@ -8,7 +8,7 @@ import simpledb.transaction.TransactionAbortedException;
 import simpledb.transaction.TransactionId;
 
 import java.io.*;
-
+import java.util.LinkedList;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -33,6 +33,9 @@ public class BufferPool {
     constructor instead. */
     public static final int DEFAULT_PAGES = 50;
 
+    private final ConcurrentHashMap<PageId, Page> pages = new ConcurrentHashMap<PageId, Page>();
+    private int maxPageNo = 0;
+
     /**
      * Creates a BufferPool that caches up to numPages pages.
      *
@@ -40,6 +43,7 @@ public class BufferPool {
      */
     public BufferPool(int numPages) {
         // some code goes here
+        maxPageNo = numPages;
     }
     
     public static int getPageSize() {
@@ -74,7 +78,24 @@ public class BufferPool {
     public  Page getPage(TransactionId tid, PageId pid, Permissions perm)
         throws TransactionAbortedException, DbException {
         // some code goes here
-        return null;
+        // If the page does not exist
+        if (!pages.containsKey(pid)) {
+            if (pages.size() >= maxPageNo) {
+                // TODO: Implement eviction policy
+                throw new DbException("Maximum number of pages reached!");
+            }
+            //TODO: Try and fetch the page
+            try {
+                Page page = DbFile.readPage(pid);
+                pages.put(pid, page);
+                return page;
+            } catch (IllegalArgumentException e) {
+                System.out.println("Unable to find page! " +);
+                throw new TransactionAbortedException();
+            }
+        } else {
+            return pages.get(pid);
+        }
     }
 
     /**
