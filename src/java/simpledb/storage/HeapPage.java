@@ -71,9 +71,9 @@ public class HeapPage implements Page {
     /** Retrieve the number of tuples on this page.
         @return the number of tuples on this page
     */
-    private int getNumTuples() {        
+    private int getNumTuples() {
         // some code goes here
-        return 0;
+        return (int) Math.floor((BufferPool.getPageSize()*8) / (td.getSize() * 8 + 1));
 
     }
 
@@ -81,11 +81,9 @@ public class HeapPage implements Page {
      * Computes the number of bytes in the header of a page in a HeapFile with each tuple occupying tupleSize bytes
      * @return the number of bytes in the header of a page in a HeapFile with each tuple occupying tupleSize bytes
      */
-    private int getHeaderSize() {        
-        
+    private int getHeaderSize() {
         // some code goes here
-        return 0;
-                 
+        return (int) Math.ceil(((double) this.getNumTuples()) / 8);
     }
     
     /** Return a view of this page before it was modified
@@ -117,8 +115,8 @@ public class HeapPage implements Page {
      * @return the PageId associated with this page.
      */
     public HeapPageId getId() {
-    // some code goes here
-    throw new UnsupportedOperationException("implement this");
+        // some code goes here
+        return pid;
     }
 
     /**
@@ -279,7 +277,7 @@ public class HeapPage implements Page {
      */
     public TransactionId isDirty() {
         // some code goes here
-	// Not necessary for lab1
+        // Not necessary for lab1
         return null;      
     }
 
@@ -288,7 +286,13 @@ public class HeapPage implements Page {
      */
     public int getNumEmptySlots() {
         // some code goes here
-        return 0;
+        int slotsAmt = 0;
+        for (int i = 0; i < this.getNumTuples(); i++) {
+            if (!this.isSlotUsed(i)){
+                slotsAmt++;
+            }
+        }
+        return slotsAmt;
     }
 
     /**
@@ -296,7 +300,14 @@ public class HeapPage implements Page {
      */
     public boolean isSlotUsed(int i) {
         // some code goes here
-        return false;
+        int byteAmt = i / 8;
+        int bitAmt = i % 8;
+        if (byteAmt >= header.length || byteAmt < 0) {
+            return false;
+        }
+    	byte byteSlot = header[byteAmt];
+    	int bitmask = 1 << bitAmt;
+        return (byteSlot&bitmask) > 0;
     }
 
     /**
@@ -313,8 +324,7 @@ public class HeapPage implements Page {
      */
     public Iterator<Tuple> iterator() {
         // some code goes here
-        return null;
+        return new HeapPageIterator(this);
     }
 
 }
-
