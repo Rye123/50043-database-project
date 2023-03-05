@@ -40,6 +40,7 @@ public class BufferPool {
      */
     public BufferPool(int numPages) {
         // some code goes here
+        pageSize = numPages;
     }
     
     public static int getPageSize() {
