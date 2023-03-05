@@ -45,7 +45,7 @@ public class HeapPageId implements PageId {
         // some code goes here
         String tableIdAsString = Integer.toString(this.tableId);
         String pageNumberAsString = Integer.toString(this.pageNo);
-        return Integer.parseInt(tableIdAsString + pageNumberAsString);
+        return this.tableId << 16 | this.pageNo & 0xffff;
     }
 
     /**

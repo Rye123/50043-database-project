@@ -23,7 +23,6 @@ public class HeapFileIterator extends AbstractDbFileIterator {
     public HeapFileIterator(HeapFile hf, TransactionId tid) {
         heapFile = hf;
         transactionId = tid;
-        currentPageNo = -1;
     }
 
     /**
@@ -69,8 +68,16 @@ public class HeapFileIterator extends AbstractDbFileIterator {
         return currentTupleIterator.next();
     }
 
+    // Re-start the iterator for reuse
     public void rewind() throws DbException, TransactionAbortedException {
         close();
         open();
+    }
+
+    // Close method
+    public void close() {
+        super.close();
+        currentTupleIterator = null;
+        currentPageNo = Integer.MAX_VALUE;
     }
 }
