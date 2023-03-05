@@ -41,7 +41,7 @@ public class Tuple implements Serializable {
      */
     public TupleDesc getTupleDesc() {
         // some code goes here
-        return this.td;
+     return this.td;
         // return null;
     }
 
