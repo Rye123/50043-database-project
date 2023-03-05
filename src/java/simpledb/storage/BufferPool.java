@@ -1,5 +1,6 @@
 package simpledb.storage;
 
+import simpledb.common.Catalog; //TODO: Verify this part works
 import simpledb.common.Database;
 import simpledb.common.Permissions;
 import simpledb.common.DbException;
@@ -8,7 +9,7 @@ import simpledb.transaction.TransactionAbortedException;
 import simpledb.transaction.TransactionId;
 
 import java.io.*;
-import java.util.LinkedList;
+import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -33,8 +34,15 @@ public class BufferPool {
     constructor instead. */
     public static final int DEFAULT_PAGES = 50;
 
-    private final ConcurrentHashMap<PageId, Page> pages = new ConcurrentHashMap<PageId, Page>();
-    private int maxPageNo = 0;
+    /**
+     * Associated a page ID with a Page.
+     */
+    private ConcurrentHashMap<PageId, Page> pages;
+
+    /**
+     * Max number of pages in buffer pool.
+     */
+    private int numPages;
 
     /**
      * Creates a BufferPool that caches up to numPages pages.
@@ -43,7 +51,8 @@ public class BufferPool {
      */
     public BufferPool(int numPages) {
         // some code goes here
-        maxPageNo = numPages;
+        this.pages = new ConcurrentHashMap<>();
+        this.numPages = numPages;
     }
     
     public static int getPageSize() {
@@ -76,26 +85,29 @@ public class BufferPool {
      * @param perm the requested permissions on the page
      */
     public  Page getPage(TransactionId tid, PageId pid, Permissions perm)
-        throws TransactionAbortedException, DbException {
-        // some code goes here
-        // If the page does not exist
-        if (!pages.containsKey(pid)) {
-            if (pages.size() >= maxPageNo) {
-                // TODO: Implement eviction policy
-                throw new DbException("Maximum number of pages reached!");
-            }
-            //TODO: Try and fetch the page
-            try {
-                Page page = DbFile.readPage(pid);
-                pages.put(pid, page);
-                return page;
-            } catch (IllegalArgumentException e) {
-                System.out.println("Unable to find page! " +);
-                throw new TransactionAbortedException();
-            }
-        } else {
+    throws TransactionAbortedException, DbException {
+        // Check if in buffer pool
+        if (pages.containsKey(pid))
             return pages.get(pid);
+        
+        // Check if sufficient space -- if not enough, EVICT
+        if (pages.size() >= numPages) {
+            evictPage();
         }
+        // look for the page -- loop through catalog tables until we find a catalog with the file with the page
+        Page page = null;
+        Catalog catalog = Database.getCatalog();
+        Iterator<Integer> tableIt = catalog.tableIdIterator();
+        while (tableIt.hasNext()) {
+            DbFile file = catalog.getDatabaseFile(tableIt.next());
+            // try to read the page, if cannot then it's not in here
+            try {
+                page = file.readPage(pid);
+            } catch (IllegalArgumentException e) {
+                // page isn't here, continue
+            }
+        }
+        return page;
     }
 
     /**
