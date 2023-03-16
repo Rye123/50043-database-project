@@ -57,11 +57,9 @@ public class HeapPageId implements PageId {
      */
     public boolean equals(Object o) {
         // some code goes here
-        // Test if object is instance of PageId
+        // Test if object is instance of PageId, return false to match test case
         if (!(o instanceof PageId)){
-            System.out.print("object not PageId");
-            // If not, throw exception
-            throw new IllegalArgumentException("object not PageId");
+            return false;
         }
         
         PageId pageIdObj = (PageId) o;
