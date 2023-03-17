@@ -1,6 +1,7 @@
 package simpledb.storage;
 
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import simpledb.common.Database;
 import simpledb.common.DbException;
@@ -8,12 +9,12 @@ import simpledb.common.Permissions;
 import simpledb.transaction.TransactionAbortedException;
 import simpledb.transaction.TransactionId;
 
-public class HeapFileIterator extends AbstractDbFileIterator {
-
+public class HeapFileIterator implements DbFileIterator {
     Iterator<Tuple> currentTupleIterator;
     TransactionId transactionId;
     HeapFile heapFile;
     int currentPageNo;
+    private boolean isOpen;
 
     /**
      * Constructor for the iterator
@@ -21,56 +22,68 @@ public class HeapFileIterator extends AbstractDbFileIterator {
      * @param tid
      */
     public HeapFileIterator(HeapFile hf, TransactionId tid) {
-        heapFile = hf;
-        transactionId = tid;
-        currentPageNo = -1;
+        this.heapFile = hf;
+        this.transactionId = tid;
+        this.currentTupleIterator = null;
+        this.isOpen = false;
+        this.currentPageNo = -1;
     }
 
     /**
      * Open the iterator, must be called before readNext.
      */
+    @Override
     public void open() throws DbException, TransactionAbortedException {
-        currentPageNo = -1;
+        this.currentPageNo = 0;
+        this.isOpen = true;
     }
 
     @Override
-    public Tuple readNext() throws TransactionAbortedException, DbException {
-
-        // Sanity check for current tuple
-        if (currentTupleIterator != null && !currentTupleIterator.hasNext()) {
-            currentTupleIterator = null;
+    public boolean hasNext() throws DbException, TransactionAbortedException {
+        boolean hasNextElement = false;
+        // Not open
+        if(!this.isOpen){
+            return false;
         }
-
-        // Iterate through pages and tuples in each page
-        while (currentTupleIterator == null && currentPageNo < heapFile.numPages() - 1) {
-            // Go next page first
-            currentPageNo++;
-
+        // Find iterator 
+        // System.out.println(this.currentTupleIterator==null);
+        // System.out.println(this.currentPageNo);
+        while (this.currentTupleIterator == null && this.currentPageNo <= this.heapFile.numPages()-1) {
+            HeapPageId currentPageId = new HeapPageId(this.heapFile.getId(), this.currentPageNo);
+            HeapPage currentPage = (HeapPage) this.heapFile.readPage(currentPageId);
+            this.currentTupleIterator = currentPage.iterator();
             // Initialize iterator for this page
-            HeapPageId currentPageId = new HeapPageId(heapFile.getId(), currentPageNo);
-
-            HeapPage currentPage = (HeapPage) Database.getBufferPool().getPage(
-                    transactionId,
-                    currentPageId,
-                    Permissions.READ_ONLY);
-
-            currentTupleIterator = currentPage.iterator();
-
-            // Check if still got item in this page
-            if (!currentTupleIterator.hasNext()){
-                currentTupleIterator = null;
+        }
+        if (!this.currentTupleIterator.hasNext()){
+            this.currentPageNo++;
+            this.currentTupleIterator = null;
+        }
+        if (this.currentTupleIterator != null){
+            if (this.currentTupleIterator.hasNext() && this.isOpen){
+                return true;
             }
         }
-
-        // If really dont have, then means really dont have alr
-        if (currentTupleIterator == null){
-            return null;
-        }
-        return currentTupleIterator.next();
+        return false;
     }
 
+    @Override
+    public Tuple next() throws TransactionAbortedException, DbException {      
+        if (!isOpen){
+            throw new NoSuchElementException();
+        }
+        Tuple returnedTuple = this.currentTupleIterator.next();
+        System.out.println(returnedTuple);
+        return returnedTuple;
+    }
+
+    @Override
     public void rewind() throws DbException, TransactionAbortedException {
-        close();
-        open();
+        this.close();
+        this.open();
+    }
+
+    @Override
+    public void close() {
+        this.isOpen = false;
     }
 }

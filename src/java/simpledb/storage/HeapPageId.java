@@ -1,5 +1,7 @@
 package simpledb.storage;
 
+import java.math.BigInteger;
+
 /** Unique identifier for HeapPage objects. */
 public class HeapPageId implements PageId {
 
@@ -45,7 +47,8 @@ public class HeapPageId implements PageId {
         // some code goes here
         String tableIdAsString = Integer.toString(this.tableId);
         String pageNumberAsString = Integer.toString(this.pageNo);
-        return Integer.parseInt(tableIdAsString + pageNumberAsString);
+        BigInteger hashValue = new BigInteger(tableIdAsString + pageNumberAsString);
+        return hashValue.intValue();
     }
 
     /**
