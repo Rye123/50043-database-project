@@ -40,7 +40,6 @@ public class HeapFileIterator implements DbFileIterator {
 
     @Override
     public boolean hasNext() throws DbException, TransactionAbortedException {
-        boolean hasNextElement = false;
         // Not open
         if(!this.isOpen){
             return false;
@@ -72,7 +71,6 @@ public class HeapFileIterator implements DbFileIterator {
             throw new NoSuchElementException();
         }
         Tuple returnedTuple = this.currentTupleIterator.next();
-        System.out.println(returnedTuple);
         return returnedTuple;
     }
 
