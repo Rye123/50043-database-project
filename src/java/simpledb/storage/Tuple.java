@@ -24,13 +24,11 @@ public class Tuple implements Serializable {
      *            instance with at least one field.
      */
     public Tuple(TupleDesc td) {
-        // some code goes here
         this.td = td;
         this.recordId = null;
-        this.fields = new ArrayList<>(td.numFields());
+        this.fields = new ArrayList<>();
 
         // add the empty fields
-        //TODO: should we take the type of field into consideration?
         for (int i = 0; i < td.numFields(); i++) {
             this.fields.add(null);
         }
@@ -40,9 +38,7 @@ public class Tuple implements Serializable {
      * @return The TupleDesc representing the schema of this tuple.
      */
     public TupleDesc getTupleDesc() {
-        // some code goes here
-     return this.td;
-        // return null;
+        return this.td;
     }
 
     /**
@@ -50,8 +46,6 @@ public class Tuple implements Serializable {
      *         be null.
      */
     public RecordId getRecordId() {
-        // some code goes here
-        // return null;
         return this.recordId;
     }
 
@@ -62,7 +56,6 @@ public class Tuple implements Serializable {
      *            the new RecordId for this tuple.
      */
     public void setRecordId(RecordId rid) {
-        // some code goes here
         this.recordId = rid;
     }
 
@@ -75,7 +68,6 @@ public class Tuple implements Serializable {
      *            new value for the field.
      */
     public void setField(int i, Field f) {
-        // some code goes here
         this.fields.set(i, f);
     }
 
@@ -86,7 +78,6 @@ public class Tuple implements Serializable {
      *            field index to return. Must be a valid index.
      */
     public Field getField(int i) {
-        // some code goes here
         return this.fields.get(i);
     }
 
@@ -114,7 +105,6 @@ public class Tuple implements Serializable {
      * */
     public Iterator<Field> fields()
     {
-        // some code goes here
         return fields.iterator();
     }
 
@@ -123,7 +113,32 @@ public class Tuple implements Serializable {
      * */
     public void resetTupleDesc(TupleDesc td)
     {
-        // some code goes here
         this.td = td;
+    }
+
+    /**
+     * Returns a new Tuple consisting of the concatenation of two tuples.
+     * @param t1
+     * @param t2
+     * @return
+     */
+    public static Tuple concat(Tuple t1, Tuple t2) {
+        Tuple newTuple = new Tuple(TupleDesc.merge(t1.getTupleDesc(), t2.getTupleDesc()));
+        int i = 0;
+
+        // Add fields in
+        for (Field f : t1.fields) {
+            newTuple.setField(i, f);
+            i++;
+        }
+
+        for (Field f : t2.fields) {
+            newTuple.setField(i, f);
+            i++;
+        }
+
+        assert i == newTuple.getTupleDesc().numFields();
+
+        return newTuple;
     }
 }

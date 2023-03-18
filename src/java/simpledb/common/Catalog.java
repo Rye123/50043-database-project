@@ -35,31 +35,29 @@ public class Catalog {
      * - a TupleDesc describing the schema
      */
     private class Table {
-        /**
-         * The DbFile associated with this table.
-         */
-        public DbFile file;
-
-        /**
-         * The name of this Table -- could be an empty string.
-         */
-        public String name;
-
-        /**
-         * The name of the primary key field
-         */
-        public String pkeyField;
-
-        /**
-         * The TupleDesc describing the schema of this table.
-         */
-        public TupleDesc td;
+        private DbFile file;
+        private String name; // name of the table
+        private String pkeyField;
 
         public Table(DbFile file, String name, String pkeyField) {
             this.file = file;
             this.name = name;
             this.pkeyField = pkeyField;
-            this.td = file.getTupleDesc();
+        }
+
+        public DbFile getFile() {
+            return this.file;
+        }
+        public String getName() {
+            return this.name;
+        }
+
+        public String getPkeyField() {
+            return this.pkeyField;
+        }
+
+        public TupleDesc getTupleDesc() {
+            return this.file.getTupleDesc();
         }
     }
 
@@ -89,7 +87,7 @@ public class Catalog {
             Table table = tableEntry.getValue();
 
             // remove an old table if it has the same ID or name
-            if (tableId == newTableId || table.name.equals(name)) {
+            if (tableId == newTableId || table.getName().equals(name)) {
                 this.tables.remove(tableId);
             }
         }
@@ -119,7 +117,7 @@ public class Catalog {
         for (Map.Entry<Integer, Table> tableEntry : tables.entrySet()) {
             int tableId = tableEntry.getKey();
             Table table = tableEntry.getValue();
-            if (table.name.equals(name))
+            if (table.getName().equals(name))
                 return tableId;
         }
 
@@ -135,7 +133,7 @@ public class Catalog {
     public TupleDesc getTupleDesc(int tableid) throws NoSuchElementException {
         if (!tables.containsKey(tableid))
             throw new NoSuchElementException();
-        return tables.get(tableid).td;
+        return tables.get(tableid).getTupleDesc();
     }
 
     /**
@@ -147,11 +145,11 @@ public class Catalog {
     public DbFile getDatabaseFile(int tableid) throws NoSuchElementException {
         if (!tables.containsKey(tableid))
             throw new NoSuchElementException();
-        return tables.get(tableid).file;
+        return tables.get(tableid).getFile();
     }
 
     public String getPrimaryKey(int tableid) {
-        return tables.get(tableid).pkeyField;
+        return tables.get(tableid).getPkeyField();
     }
 
     public Iterator<Integer> tableIdIterator() {
@@ -159,7 +157,7 @@ public class Catalog {
     }
 
     public String getTableName(int id) {
-        return tables.get(id).name;
+        return tables.get(id).getName();
     }
     
     /** Delete all tables from the catalog */

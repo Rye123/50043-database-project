@@ -11,6 +11,9 @@ import java.io.Serializable;
 public class Predicate implements Serializable {
 
     private static final long serialVersionUID = 1L;
+    private int fieldNumber;
+    private Op op;
+    private Field operand;
 
     /** Constants used for return codes in Field.compare */
     public enum Op implements Serializable {
@@ -57,8 +60,10 @@ public class Predicate implements Serializable {
      * @param operand
      *            field value to compare passed in tuples to
      */
-    public Predicate(int field, Op op, Field operand) {
-        // some code goes here
+    public Predicate(int fieldNumber, Op op, Field operand) {
+        this.fieldNumber = fieldNumber;
+        this.op = op;
+        this.operand = operand;
     }
 
     /**
@@ -66,8 +71,7 @@ public class Predicate implements Serializable {
      */
     public int getField()
     {
-        // some code goes here
-        return -1;
+        return this.fieldNumber;
     }
 
     /**
@@ -75,8 +79,7 @@ public class Predicate implements Serializable {
      */
     public Op getOp()
     {
-        // some code goes here
-        return null;
+        return this.op;
     }
     
     /**
@@ -84,13 +87,12 @@ public class Predicate implements Serializable {
      */
     public Field getOperand()
     {
-        // some code goes here
-        return null;
+        return this.operand;
     }
     
     /**
      * Compares the field number of t specified in the constructor to the
-     * operand field specified in the constructor using the operator specific in
+     * operand field specified in the constructor using the operator specified in
      * the constructor. The comparison can be made through Field's compare
      * method.
      * 
@@ -99,8 +101,7 @@ public class Predicate implements Serializable {
      * @return true if the comparison is true, false otherwise.
      */
     public boolean filter(Tuple t) {
-        // some code goes here
-        return false;
+        return t.getField(this.fieldNumber).compare(this.op, this.operand);
     }
 
     /**
@@ -109,6 +110,6 @@ public class Predicate implements Serializable {
      */
     public String toString() {
         // some code goes here
-        return "";
+        return "f = " + String.valueOf(this.fieldNumber) + " op = " + this.op.toString() + " operand = " + this.operand.toString();
     }
 }

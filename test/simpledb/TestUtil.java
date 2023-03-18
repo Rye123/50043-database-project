@@ -146,7 +146,12 @@ public class TestUtil {
             }
 
             if (!matched) {
-                throw new RuntimeException("expected tuple not found: " + expectedTup);
+                ArrayList<Tuple> tupleList = new ArrayList<>();
+                actual.rewind();
+                while (actual.hasNext()) {
+                    tupleList.add(actual.next());
+                }
+                throw new RuntimeException("expected tuple not found: " + expectedTup + "\n\n" + tupleList.toString());
             }
         }
     }
