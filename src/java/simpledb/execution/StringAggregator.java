@@ -1,7 +1,17 @@
 package simpledb.execution;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import simpledb.common.Type;
 import simpledb.storage.Tuple;
+import simpledb.storage.TupleDesc;
+import simpledb.storage.TupleIterator;
+import simpledb.storage.Field;
+import simpledb.storage.IntField;
+import simpledb.storage.StringField;
 
 /**
  * Knows how to compute some aggregate over a set of StringFields.
@@ -9,6 +19,14 @@ import simpledb.storage.Tuple;
 public class StringAggregator implements Aggregator {
 
     private static final long serialVersionUID = 1L;
+    private int gbfieldIndex;
+    private Type gbfieldType;
+    private int afieldIndex;
+    private Op aop;
+
+    private TupleDesc td;
+    private Map<Field, Integer> curCounts;
+    private StringField defaultField = new StringField("i hate java i hate java i hate java", 35);
 
     /**
      * Aggregate constructor
@@ -20,7 +38,14 @@ public class StringAggregator implements Aggregator {
      */
 
     public StringAggregator(int gbfield, Type gbfieldtype, int afield, Op what) {
-        // some code goes here
+        this.gbfieldIndex = gbfield;
+        this.gbfieldType = gbfieldtype;
+        this.afieldIndex = afield;
+        this.aop = what;
+        if (what != Op.COUNT)
+            throw new IllegalArgumentException("y u bully me");
+        this.td = null;
+        this.curCounts = new HashMap<>();
     }
 
     /**
@@ -28,7 +53,40 @@ public class StringAggregator implements Aggregator {
      * @param tup the Tuple containing an aggregate field and a group-by field
      */
     public void mergeTupleIntoGroup(Tuple tup) {
-        // some code goes here
+        // Set the tupledesc
+        if (td == null) {
+            Type aFieldType = new IntField(69).getType(); // since it's always a COUNT which is an int
+            String aFieldName = tup.getTupleDesc().getFieldName(afieldIndex);
+            if (gbfieldIndex == NO_GROUPING) {
+                td = new TupleDesc(
+                    new Type[]{aFieldType},
+                    new String[]{aFieldName}
+                );
+            } else {
+                Type gbFieldType = tup.getTupleDesc().getFieldType(gbfieldIndex);
+                assert gbFieldType.equals(this.gbfieldType);
+                String gbFieldName = tup.getTupleDesc().getFieldName(gbfieldIndex);
+                td = new TupleDesc(
+                    new Type[]{gbFieldType, aFieldType},
+                    new String[]{gbFieldName, aFieldName}
+                );
+            }
+        }
+
+        Field gbfield = defaultField;
+        if (gbfieldIndex != NO_GROUPING)
+            gbfield = tup.getField(gbfieldIndex);
+        
+        int curCount = 0;
+        
+        // set current values based on group
+        if (curCounts.containsKey(gbfield)) {
+            curCount = curCounts.get(gbfield);
+        }
+
+        // update values based on operation
+        curCount++;
+        curCounts.put(gbfield, curCount);
     }
 
     /**
@@ -40,8 +98,21 @@ public class StringAggregator implements Aggregator {
      *   aggregate specified in the constructor.
      */
     public OpIterator iterator() {
-        // some code goes here
-        throw new UnsupportedOperationException("please implement me for lab2");
+        ArrayList<Tuple> tuples = new ArrayList<>();
+        for (Entry<Field, Integer> entry : curCounts.entrySet()) {
+            Field gField = entry.getKey();
+            IntField value = new IntField(entry.getValue());
+            Tuple t = new Tuple(td);
+            if (gbfieldIndex == NO_GROUPING) {
+                t.setField(0, value);
+            } else {
+                t.setField(0, gField);
+                t.setField(1, value);
+            }
+            tuples.add(t);
+        }
+        return new TupleIterator(td, tuples);
+        
     }
 
 }
