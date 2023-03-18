@@ -1,7 +1,13 @@
 package simpledb.storage;
 
+import java.math.BigInteger;
+
 /** Unique identifier for HeapPage objects. */
 public class HeapPageId implements PageId {
+
+    // Values related to HeapPageId
+    private int tableId = 0;
+    private int pageNo = 0;
 
     /**
      * Constructor. Create a page id structure for a specific page of a
@@ -12,12 +18,14 @@ public class HeapPageId implements PageId {
      */
     public HeapPageId(int tableId, int pgNo) {
         // some code goes here
+        this.tableId = tableId;
+        this.pageNo = pgNo;
     }
 
     /** @return the table associated with this PageId */
     public int getTableId() {
         // some code goes here
-        return 0;
+        return tableId;
     }
 
     /**
@@ -26,7 +34,7 @@ public class HeapPageId implements PageId {
      */
     public int getPageNumber() {
         // some code goes here
-        return 0;
+        return pageNo;
     }
 
     /**
@@ -37,7 +45,10 @@ public class HeapPageId implements PageId {
      */
     public int hashCode() {
         // some code goes here
-        throw new UnsupportedOperationException("implement this");
+        String tableIdAsString = Integer.toString(this.tableId);
+        String pageNumberAsString = Integer.toString(this.pageNo);
+        BigInteger hashValue = new BigInteger(tableIdAsString + pageNumberAsString);
+        return hashValue.intValue();
     }
 
     /**
@@ -49,7 +60,18 @@ public class HeapPageId implements PageId {
      */
     public boolean equals(Object o) {
         // some code goes here
-        return false;
+        // Test if object is instance of PageId, return false to match test case
+        if (!(o instanceof PageId)){
+            return false;
+        }
+        
+        PageId pageIdObj = (PageId) o;
+
+        if (pageIdObj.getPageNumber() == this.pageNo && pageIdObj.getTableId() == this.tableId) {
+            return true;
+        }else {
+            return false;
+        }
     }
 
     /**

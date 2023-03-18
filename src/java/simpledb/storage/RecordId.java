@@ -10,6 +10,10 @@ public class RecordId implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    // Metadata
+    PageId pid;
+    int tupleno;
+
     /**
      * Creates a new RecordId referring to the specified PageId and tuple
      * number.
@@ -21,6 +25,8 @@ public class RecordId implements Serializable {
      */
     public RecordId(PageId pid, int tupleno) {
         // some code goes here
+        this.pid = pid;
+        this.tupleno = tupleno;
     }
 
     /**
@@ -28,7 +34,7 @@ public class RecordId implements Serializable {
      */
     public int getTupleNumber() {
         // some code goes here
-        return 0;
+        return this.tupleno;
     }
 
     /**
@@ -36,7 +42,7 @@ public class RecordId implements Serializable {
      */
     public PageId getPageId() {
         // some code goes here
-        return null;
+        return this.pid;
     }
 
     /**
@@ -48,7 +54,20 @@ public class RecordId implements Serializable {
     @Override
     public boolean equals(Object o) {
         // some code goes here
-        throw new UnsupportedOperationException("implement this");
+        // Test if they are both of type RecordId
+        if (!(o instanceof RecordId)){
+            System.out.print("object not RecordId");
+            // If not, throw exception
+            throw new IllegalArgumentException("object not RecordId");
+        }
+        
+        RecordId recordIdObj = (RecordId) o;
+
+        if (recordIdObj.getTupleNumber() == this.tupleno && recordIdObj.getPageId().equals(this.pid)) {
+            return true;
+        }else {
+            return false;
+        }
     }
 
     /**
@@ -60,7 +79,9 @@ public class RecordId implements Serializable {
     @Override
     public int hashCode() {
         // some code goes here
-        throw new UnsupportedOperationException("implement this");
+        String tupleNoAsString = Integer.toString(this.tupleno);
+        String pageIdAsString = Integer.toString(this.pid.getPageNumber());
+        return Integer.parseInt(pageIdAsString + tupleNoAsString);
 
     }
 
