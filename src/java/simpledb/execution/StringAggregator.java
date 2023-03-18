@@ -56,7 +56,7 @@ public class StringAggregator implements Aggregator {
         // Set the tupledesc
         if (td == null) {
             Type aFieldType = new IntField(69).getType(); // since it's always a COUNT which is an int
-            String aFieldName = tup.getTupleDesc().getFieldName(afieldIndex);
+            String aFieldName = aop.toString() + "(" + tup.getTupleDesc().getFieldName(afieldIndex) + ")"; // give an iNfOrMaTiVe nAmE
             if (gbfieldIndex == NO_GROUPING) {
                 td = new TupleDesc(
                     new Type[]{aFieldType},
@@ -64,7 +64,6 @@ public class StringAggregator implements Aggregator {
                 );
             } else {
                 Type gbFieldType = tup.getTupleDesc().getFieldType(gbfieldIndex);
-                assert gbFieldType.equals(this.gbfieldType);
                 String gbFieldName = tup.getTupleDesc().getFieldName(gbfieldIndex);
                 td = new TupleDesc(
                     new Type[]{gbFieldType, aFieldType},
