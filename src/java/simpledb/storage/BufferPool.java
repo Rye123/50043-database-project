@@ -95,18 +95,8 @@ public class BufferPool {
             evictPage();
         }
         // look for the page -- loop through catalog tables until we find a catalog with the file with the page
-        Page page = null;
-        Catalog catalog = Database.getCatalog();
-        Iterator<Integer> tableIt = catalog.tableIdIterator();
-        while (tableIt.hasNext()) {
-            DbFile file = catalog.getDatabaseFile(tableIt.next());
-            // try to read the page, if cannot then it's not in here
-            try {
-                page = file.readPage(pid);
-            } catch (IllegalArgumentException e) {
-                // page isn't here, continue
-            }
-        }
+        Page page = Database.getCatalog().getDatabaseFile(pid.getTableId()).readPage(pid);
+        pages.put(pid, page);
         return page;
     }
 

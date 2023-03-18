@@ -127,26 +127,17 @@ public class Join extends Operator {
                 }
             }
             child2.rewind();
-            if (child1.hasNext())
-                currentTuple = child1.next();
-        } while (child1.hasNext());
+        } while (hasNextAndUpdateCurrent());
 
         return null;
+    }
 
-
-        // while (child1.hasNext()) {
-        //     Tuple t1 = child1.next();
-        //     while (child2.hasNext()) {
-        //         Tuple t2 = child2.next();
-        //         if (p.filter(t1, t2)) {
-        //             Tuple newTuple = Tuple.concat(t1, t2);
-        //             assert newTuple.getTupleDesc().equals(this.td);
-        //             return newTuple;
-        //         }
-        //     }
-        //     // reset child2
-        //     child2.rewind();
-        // }
+    private Boolean hasNextAndUpdateCurrent() throws TransactionAbortedException, DbException{
+        if (child1.hasNext()) {
+            currentTuple = child1.next();
+            return true;
+        }
+        return false;
     }
 
     @Override
