@@ -24,8 +24,8 @@ public class HeapPage implements Page {
     final byte[] header;
     final Tuple[] tuples;
     final int numSlots;
-    boolean dirty;
-    TransactionId dirtyTransactionId;
+    private boolean dirty;
+    private TransactionId dirtyTransactionId;
 
     byte[] oldData;
     private final Byte oldDataLock= (byte) 0;
