@@ -8,7 +8,6 @@ import simpledb.transaction.TransactionId;
 
 import java.util.*;
 import java.io.*;
-import java.sql.Timestamp;
 
 /**
  * Each instance of HeapPage stores data for one page of HeapFiles and 
@@ -30,8 +29,6 @@ public class HeapPage implements Page {
 
     byte[] oldData;
     private final Byte oldDataLock= (byte) 0;
-    private TransactionId dirtyTid;
-    private Timestamp latestAccessTS;
 
     /**
      * Create a HeapPage from a set of bytes of data read from disk.
@@ -52,8 +49,7 @@ public class HeapPage implements Page {
     public HeapPage(HeapPageId id, byte[] data) throws IOException {
         this.pid = id;
         this.td = Database.getCatalog().getTupleDesc(id.getTableId());
-        this.numSlots = getNumTuples();
-        this.dirtyTid = null;
+        this.numSlots = getMaxTuples();
         DataInputStream dis = new DataInputStream(new ByteArrayInputStream(data));
 
         // allocate and read the header slots of this page
@@ -304,20 +300,17 @@ public class HeapPage implements Page {
      * that did the dirtying
      */
     public void markDirty(boolean dirty, TransactionId tid) {
-        if (dirty) {
-            this.dirtyTid = tid;
-        } else {
-            this.dirtyTid = null;
-        }
+        this.dirty = dirty;
+        this.dirtyTransactionId = tid;
     }
 
     /**
      * Returns the tid of the transaction that last dirtied this page, or null if the page is not dirty
      */
     public TransactionId isDirty() {
-        // some code goes here
-        // Not necessary for lab1
-        return this.dirtyTid; 
+        if (dirty)
+            return dirtyTransactionId;
+        return null;
     }
 
     /**
@@ -372,23 +365,6 @@ public class HeapPage implements Page {
      */
     public Iterator<Tuple> iterator() {
         return new HeapPageIterator(this);
-    }
-    /**
-     * Set the last page access timestamp to the current time.
-     * Used for the LRU Buffer Pool replacement policy.
-     */
-    public void updateLatestAccessTS() {
-        Date date = new Date();  
-        Timestamp ts=new Timestamp(date.getTime());
-        this.latestAccessTS = ts;
-    }
-
-    /**
-     * Get the last access timestamp of the current page.
-     * Used for the LRU Buffer Pool replacement policy.
-     */
-    public Timestamp getLatestAccessTS() {
-        return this.latestAccessTS;
     }
 
 }

@@ -215,11 +215,8 @@ public class BufferPool {
         are removed from the cache so they can be reused safely
     */
     public synchronized void discardPage(PageId pid) {
-        try{
-            this.pages.remove(pid);
-        }catch(NullPointerException e){
-            System.out.println("pid does not exist");
-        }
+        // some code goes here
+        // not necessary for lab1
     }
 
     /**
@@ -227,20 +224,8 @@ public class BufferPool {
      * @param pid an ID indicating the page to flush
      */
     private synchronized  void flushPage(PageId pid) throws IOException {
-        Page page = this.pages.get(pid);
-
-        if (this.pages.containsKey(pid)) {
-            TransactionId dirty = page.isDirty();
-            // Restore to previous version before dirtied
-            if (dirty != null) {
-                // Indicated in LogTest PatchTest
-                Database.getLogFile().logWrite(dirty, page.getBeforeImage(), page);
-                DbFile heapFile = Database.getCatalog().getDatabaseFile(pid.getTableId());
-                heapFile.writePage(page);
-                // Once written to buffer, remark as not dirty, can be overwritten
-                page.markDirty(false, null);
-            }
-        }
+        // some code goes here
+        // not necessary for lab1
     }
 
     /** Write all pages of the specified transaction to disk.
@@ -255,29 +240,8 @@ public class BufferPool {
      * Flushes the page to disk to ensure dirty pages are updated on disk.
      */
     private synchronized  void evictPage() throws DbException {
-        Iterator<PageId> pageIdIter = this.pages.keySet().iterator();
-
-        Page LRUPage = null;
-
-        // Assume pages are in access order, get LRU page that is not dirty
-        while (pageIdIter.hasNext()) {
-            Page pg = this.pages.get(pageIdIter.next());
-            if (pg.isDirty() == null) {
-                LRUPage = pg;
-            }
-        }
-        // All pages are dirty
-        if (LRUPage == null) {
-            throw new DbException("There are no pages to evict in the buffer pool.");
-        }
-
-        try {
-            this.flushPage(LRUPage.getId());
-        } catch (IOException e) {
-            throw new DbException("Page could not be flushed.");
-        }
-        // Remove !dirty page
-        this.pages.remove(LRUPage.getId());
+        // some code goes here
+        // not necessary for lab1
     }
 
 }
