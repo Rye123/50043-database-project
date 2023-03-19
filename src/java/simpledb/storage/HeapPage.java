@@ -47,7 +47,7 @@ public class HeapPage implements Page {
     public HeapPage(HeapPageId id, byte[] data) throws IOException {
         this.pid = id;
         this.td = Database.getCatalog().getTupleDesc(id.getTableId());
-        this.numSlots = getNumTuples();
+        this.numSlots = getMaxTuples();
         DataInputStream dis = new DataInputStream(new ByteArrayInputStream(data));
 
         // allocate and read the header slots of this page
@@ -72,8 +72,14 @@ public class HeapPage implements Page {
         @return the number of tuples on this page
     */
     private int getNumTuples() {
-        return (int) Math.floor((BufferPool.getPageSize()*8) / (td.getSize() * 8 + 1));
+        return numSlots - getNumEmptySlots();
+    }
 
+    /**
+     * Retrieve maximum number of tuples this page can hold.
+     */
+    public int getMaxTuples() {
+        return (BufferPool.getPageSize()*8) / (td.getSize() * 8 + 1);
     }
 
     /**
@@ -81,7 +87,7 @@ public class HeapPage implements Page {
      * @return the number of bytes in the header of a page in a HeapFile with each tuple occupying tupleSize bytes
      */
     private int getHeaderSize() {
-        return (int) Math.ceil(((double) this.getNumTuples()) / 8);
+        return (int) Math.ceil(((double) this.getMaxTuples()) / 8);
     }
     
     /** Return a view of this page before it was modified
@@ -283,7 +289,7 @@ public class HeapPage implements Page {
      */
     public int getNumEmptySlots() {
         int slotsAmt = 0;
-        for (int i = 0; i < this.getNumTuples(); i++) {
+        for (int i = 0; i < numSlots; i++) {
             if (!this.isSlotUsed(i)){
                 slotsAmt++;
             }
