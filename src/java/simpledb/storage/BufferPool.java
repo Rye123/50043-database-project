@@ -203,8 +203,11 @@ public class BufferPool {
         are removed from the cache so they can be reused safely
     */
     public synchronized void discardPage(PageId pid) {
-        // some code goes here
-        // not necessary for lab1
+        try{
+            this.pages.remove(pid);
+        }catch(NullPointerException e){
+            System.out.println("pid does not exist");
+        }
     }
 
     /**
@@ -212,8 +215,19 @@ public class BufferPool {
      * @param pid an ID indicating the page to flush
      */
     private synchronized  void flushPage(PageId pid) throws IOException {
-        // some code goes here
-        // not necessary for lab1
+        Page page = this.pages.get(pid);
+
+        if (this.pages.containsKey(pid)) {
+            TransactionId dirty = page.isDirty();
+            // Restore to previous version before dirtied
+            if (dirty != null) {
+                Database.getLogFile().logWrite(dirty, page.getBeforeImage(), page);
+                Database.getLogFile().force();
+                DbFile hpFile = Database.getCatalog().getDatabaseFile(pid.getTableId());
+                hpFile.writePage(page);
+                page.markDirty(false, null);
+            }
+        }
     }
 
     /** Write all pages of the specified transaction to disk.

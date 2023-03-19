@@ -99,6 +99,12 @@ public class HeapFile implements DbFile {
     public void writePage(Page page) throws IOException {
         // some code goes here
         // not necessary for lab1
+        try (RandomAccessFile randAccessFile = new RandomAccessFile(file, "rw")) {
+            randAccessFile.seek(page.getId().getPageNumber() * BufferPool.getPageSize());
+            randAccessFile.write(page.getPageData());
+        }catch(IOException e){
+            System.out.println(e);
+        }
     }
 
     /**
