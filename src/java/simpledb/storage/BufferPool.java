@@ -218,9 +218,9 @@ public class BufferPool {
      *     break simpledb if running in NO STEAL mode.
      */
     public synchronized void flushAllPages() throws IOException {
-        // some code goes here
-        // not necessary for lab1
-
+        for (PageId pid : pages.keySet()) {
+            flushPage(pid);
+        }
     }
 
     /** Remove the specific page id from the buffer pool.
@@ -243,12 +243,12 @@ public class BufferPool {
      * @param pid an ID indicating the page to flush
      */
     private synchronized  void flushPage(PageId pid) throws IOException {
+        // write dirty page to disk, and mark it as not dirty
         Page page = this.pages.get(pid);
 
         if (this.pages.containsKey(pid)) {
             TransactionId dirtyTid = page.isDirty();
 
-            // Restore to previous version before dirtied
             if (dirtyTid != null) {
                 DbFile f = Database.getCatalog().getDatabaseFile(pid.getTableId());
                 f.writePage(page);
@@ -269,31 +269,31 @@ public class BufferPool {
      * Flushes the page to disk to ensure dirty pages are updated on disk.
      */
     private synchronized  void evictPage() throws DbException {
-        Iterator<PageId> pageIdIter = this.pages.keySet().iterator();
         PageId lruPid = null;
         int lowestLastUsedVal = Integer.MAX_VALUE;
 
         // Get LRU Page
         for (PageId pid : this.pages.keySet()) {
-            Page page = this.pages.get(pid);
             int lastUsed = this.lastUsed.get(pid);
-            if (lowestLastUsedVal > lastUsed && page.isDirty() == null) {
+            if (lowestLastUsedVal > lastUsed) {
                 lowestLastUsedVal = lastUsed;
                 lruPid = pid;
             }
         }
-
         if (lruPid == null)
             throw new DbException("nothing to evict.");
-        
-        // YEET HIM OUT
-        try {
-            // but save him first :v
-            this.flushPage(lruPid);
-        } catch (IOException e) {
-            throw new DbException("page could not be yeeted. y u bully me");
+
+        Page lruPage = this.pages.get(lruPid);
+        if (lruPage.isDirty() != null) {
+            // page is dirty, flush first
+            try {
+                this.flushPage(lruPid);
+            } catch (IOException e) {
+                throw new DbException("page could not be yeeted. y u bully me");
+            }
         }
 
+        // YEET HIM OUT
         this.pages.remove(lruPid);
         this.lastUsed.remove(lruPid);
     }
