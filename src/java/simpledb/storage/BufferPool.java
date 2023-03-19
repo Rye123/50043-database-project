@@ -221,10 +221,11 @@ public class BufferPool {
             TransactionId dirty = page.isDirty();
             // Restore to previous version before dirtied
             if (dirty != null) {
+                // Indicated in LogTest PatchTest
                 Database.getLogFile().logWrite(dirty, page.getBeforeImage(), page);
-                Database.getLogFile().force();
-                DbFile hpFile = Database.getCatalog().getDatabaseFile(pid.getTableId());
-                hpFile.writePage(page);
+                DbFile heapFile = Database.getCatalog().getDatabaseFile(pid.getTableId());
+                heapFile.writePage(page);
+                // Once written to buffer, remark as not dirty, can be overwritten
                 page.markDirty(false, null);
             }
         }
@@ -242,8 +243,29 @@ public class BufferPool {
      * Flushes the page to disk to ensure dirty pages are updated on disk.
      */
     private synchronized  void evictPage() throws DbException {
-        // some code goes here
-        // not necessary for lab1
+        Iterator<PageId> pageIdIter = this.pages.keySet().iterator();
+
+        Page LRUPage = null;
+
+        // Assume pages are in access order, get LRU page that is not dirty
+        while (pageIdIter.hasNext()) {
+            Page pg = this.pages.get(pageIdIter.next());
+            if (pg.isDirty() == null) {
+                LRUPage = pg;
+            }
+        }
+        // All pages are dirty
+        if (LRUPage == null) {
+            throw new DbException("There are no pages to evict in the buffer pool.");
+        }
+
+        try {
+            this.flushPage(LRUPage.getId());
+        } catch (IOException e) {
+            throw new DbException("Page could not be flushed.");
+        }
+        // Remove !dirty page
+        this.pages.remove(LRUPage.getId());
     }
 
 }
