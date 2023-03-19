@@ -1,7 +1,17 @@
 package simpledb.execution;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import simpledb.common.Type;
+import simpledb.storage.Field;
+import simpledb.storage.IntField;
+import simpledb.storage.StringField;
 import simpledb.storage.Tuple;
+import simpledb.storage.TupleDesc;
+import simpledb.storage.TupleIterator;
 
 /**
  * Knows how to compute some aggregate over a set of IntFields.
@@ -9,6 +19,16 @@ import simpledb.storage.Tuple;
 public class IntegerAggregator implements Aggregator {
 
     private static final long serialVersionUID = 1L;
+    private int gbfieldIndex;
+    private Type gbfieldType;
+    private int afieldIndex;
+    private Op aop;
+
+    private TupleDesc td;
+    private Map<Field, Integer> curValues;
+    private Map<Field, Integer> curSums;
+    private Map<Field, Integer> curCounts;
+    private StringField defaultField = new StringField("i hate java i hate java i hate java", 35);
 
     /**
      * Aggregate constructor
@@ -26,7 +46,15 @@ public class IntegerAggregator implements Aggregator {
      */
 
     public IntegerAggregator(int gbfield, Type gbfieldtype, int afield, Op what) {
-        // some code goes here
+        this.gbfieldIndex = gbfield;
+        this.gbfieldType = gbfieldtype;
+        this.afieldIndex = afield;
+        this.aop = what;
+
+        this.td = null;
+        this.curValues = new HashMap<>();
+        this.curSums = new HashMap<>();
+        this.curCounts = new HashMap<>();
     }
 
     /**
@@ -37,7 +65,89 @@ public class IntegerAggregator implements Aggregator {
      *            the Tuple containing an aggregate field and a group-by field
      */
     public void mergeTupleIntoGroup(Tuple tup) {
-        // some code goes here
+        // Set the tupledesc
+        if (td == null) {
+            Type aFieldType = tup.getTupleDesc().getFieldType(afieldIndex);
+            String aFieldName = aop.toString() + "(" + tup.getTupleDesc().getFieldName(afieldIndex) + ")"; // give an iNfOrMaTiVe nAmE
+            if (gbfieldIndex == NO_GROUPING) {
+                td = new TupleDesc(
+                    new Type[]{aFieldType},
+                    new String[]{aFieldName}
+                );
+            } else {
+                Type gbFieldType = tup.getTupleDesc().getFieldType(gbfieldIndex);
+                String gbFieldName = tup.getTupleDesc().getFieldName(gbfieldIndex);
+                td = new TupleDesc(
+                    new Type[]{gbFieldType, aFieldType},
+                    new String[]{gbFieldName, aFieldName}
+                );
+            }
+        }
+
+        Field gbfield = defaultField;
+        if (gbfieldIndex != NO_GROUPING)
+            gbfield = tup.getField(gbfieldIndex);
+        
+        IntField aField = (IntField) tup.getField(afieldIndex);
+        int newVal = aField.getValue();
+        int curVal = 0;
+        int curSum = 0;
+        int curCount = 0;
+
+        // set current values based on group
+        if (curValues.containsKey(gbfield)) {
+            curVal = curValues.get(gbfield);
+            curSum = curSums.get(gbfield);
+            curCount = curCounts.get(gbfield);
+        } else {
+            // set based on operation
+            switch (aop) {
+                case MIN:
+                    curVal = Integer.MAX_VALUE;
+                    break;
+                case MAX:
+                    curVal = Integer.MIN_VALUE;
+                    break;
+                case SUM:
+                case AVG:
+                case COUNT:
+                case SUM_COUNT:
+                case SC_AVG:
+                    curVal = 0;
+                    break;
+            }
+        }
+        
+        // update values based on operation
+        curSum += newVal;
+        curCount++;
+        switch (aop) {
+            case MIN:
+                if (newVal < curVal)
+                    curVal = newVal;
+                break;
+            case MAX:
+                if (newVal > curVal)
+                    curVal = newVal;
+                break;
+            case SUM:
+                curVal = curSum;
+                break;
+            case AVG:
+                curVal = curSum/curCount;
+                break;
+            case COUNT:
+                curVal = curCount;
+                break;
+            case SUM_COUNT:
+            case SC_AVG:
+                break;
+        }
+
+        // set the new values
+        curValues.put(gbfield, curVal);
+        curSums.put(gbfield, curSum);
+        curCounts.put(gbfield, curCount);
     }
 
     /**
@@ -49,9 +159,20 @@ public class IntegerAggregator implements Aggregator {
      *         the constructor.
      */
     public OpIterator iterator() {
-        // some code goes here
-        throw new
-        UnsupportedOperationException("please implement me for lab2");
+        ArrayList<Tuple> tuples = new ArrayList<>();
+        for (Entry<Field, Integer> entry : curValues.entrySet()) {
+            Field gField = entry.getKey();
+            IntField value = new IntField(entry.getValue());
+            Tuple t = new Tuple(td);
+            if (gbfieldIndex == NO_GROUPING) {
+                t.setField(0, value);
+            } else {
+                t.setField(0, gField);
+                t.setField(1, value);
+            }
+            tuples.add(t);
+        }
+        return new TupleIterator(td, tuples);
     }
 
 }
