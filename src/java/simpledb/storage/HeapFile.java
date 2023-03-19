@@ -33,7 +33,6 @@ public class HeapFile implements DbFile {
      *            file.
      */
     public HeapFile(File f, TupleDesc td) {
-        // some code goes here
         this.file = f;
         this.hashCode = f.getAbsoluteFile().hashCode();
         this.tupleDesc = td;
@@ -45,7 +44,6 @@ public class HeapFile implements DbFile {
      * @return the File backing this HeapFile on disk.
      */
     public File getFile() {
-        // some code goes here
         return this.file;
     }
 
@@ -59,7 +57,6 @@ public class HeapFile implements DbFile {
      * @return an ID uniquely identifying this HeapFile.
      */
     public int getId() {
-        // some code goes here
         return this.hashCode;
     }
 
@@ -69,13 +66,11 @@ public class HeapFile implements DbFile {
      * @return TupleDesc of this DbFile.
      */
     public TupleDesc getTupleDesc() {
-        // some code goes here
        return this.tupleDesc;
     }
 
     // see DbFile.java for javadocs
     public Page readPage(PageId pid) {
-        // some code goes here
         try {
             RandomAccessFile randAccessFile = new RandomAccessFile(this.file,"r");
             int offset = BufferPool.getPageSize() * pid.getPageNumber();
@@ -105,7 +100,6 @@ public class HeapFile implements DbFile {
      * Returns the number of pages in this HeapFile.
      */
     public int numPages() {
-        // some code goes here
         return (int) Math.ceil(this.file.length()/BufferPool.getPageSize());
     }
 
@@ -127,7 +121,6 @@ public class HeapFile implements DbFile {
 
     // see DbFile.java for javadocs
     public DbFileIterator iterator(TransactionId tid) {
-        // some code goes here
         return new HeapFileIterator(this, tid);
     }
 
