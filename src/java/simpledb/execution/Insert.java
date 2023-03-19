@@ -111,7 +111,6 @@ public class Insert extends Operator {
 
     @Override
     public OpIterator[] getChildren() {
-        // some code goes here
         return new OpIterator[]{this.child};
     }
 
