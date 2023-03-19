@@ -1,8 +1,13 @@
 package simpledb.execution;
 
+import java.io.IOException;
+
 import simpledb.common.Database;
 import simpledb.common.DbException;
+import simpledb.common.Type;
 import simpledb.storage.BufferPool;
+import simpledb.storage.DbFile;
+import simpledb.storage.IntField;
 import simpledb.storage.Tuple;
 import simpledb.storage.TupleDesc;
 import simpledb.transaction.TransactionAbortedException;
@@ -14,7 +19,13 @@ import simpledb.transaction.TransactionId;
  */
 public class Insert extends Operator {
 
+    private DbFile file;
     private static final long serialVersionUID = 1L;
+    private TransactionId tid;
+    private OpIterator child;
+    private TupleDesc td;
+    private int tableId;
+    private boolean fetchNextCalledBefore;
 
     /**
      * Constructor.
@@ -31,24 +42,36 @@ public class Insert extends Operator {
      */
     public Insert(TransactionId t, OpIterator child, int tableId)
             throws DbException {
-        // some code goes here
+        this.file = Database.getCatalog().getDatabaseFile(tableId);
+        this.tid = t;
+        this.child = child;
+        this.tableId = tableId;
+        this.fetchNextCalledBefore = false;
+
+        if (!this.file.getTupleDesc().equals(this.child.getTupleDesc()))
+            throw new DbException("table td not same as child td watashi you doing");
+        
+        this.td = new TupleDesc(new Type[]{Type.INT_TYPE}, new String[]{"Insert Count"});
     }
 
     public TupleDesc getTupleDesc() {
-        // some code goes here
-        return null;
+        return td;
     }
 
     public void open() throws DbException, TransactionAbortedException {
-        // some code goes here
+        this.fetchNextCalledBefore = false;
+        this.child.open();
+        super.open();
     }
 
     public void close() {
-        // some code goes here
+        super.close();
+        this.child.close();
     }
 
     public void rewind() throws DbException, TransactionAbortedException {
-        // some code goes here
+        this.fetchNextCalledBefore = false;
+        this.child.rewind();
     }
 
     /**
@@ -65,18 +88,35 @@ public class Insert extends Operator {
      * @see BufferPool#insertTuple
      */
     protected Tuple fetchNext() throws TransactionAbortedException, DbException {
-        // some code goes here
-        return null;
+        if (fetchNextCalledBefore)
+            return null;
+
+        int count = 0;
+        while(child.hasNext()) {
+            Tuple toAdd = child.next();
+            try {
+                Database.getBufferPool().insertTuple(tid, tableId, toAdd);
+            } catch (IOException e) {
+                throw new DbException("Could not write to file.");
+            }
+            count++;
+        }
+        // Construct tuple
+        IntField countField = new IntField(count);
+        Tuple countTup = new Tuple(td);
+        countTup.setField(0, countField);
+        this.fetchNextCalledBefore = true;
+        return countTup;
     }
 
     @Override
     public OpIterator[] getChildren() {
-        // some code goes here
-        return null;
+        return new OpIterator[]{this.child};
     }
 
     @Override
     public void setChildren(OpIterator[] children) {
-        // some code goes here
+        if (this.child != children[0])
+            this.child = children[0];
     }
 }
