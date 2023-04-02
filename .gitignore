@@ -24,3 +24,6 @@ hs_err_pid*
 
 # Compiled source files
 bin/
+
+# MacOS folder attribute files
+.DS_Store
