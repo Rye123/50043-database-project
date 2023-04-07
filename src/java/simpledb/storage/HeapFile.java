@@ -122,7 +122,7 @@ public class HeapFile implements DbFile {
         ArrayList<Page> modifiedPages = new ArrayList<>();
         for (int i = 0; i < this.numPages(); i++) {
             PageId pid = new HeapPageId(this.getId(), i);
-            HeapPage page = (HeapPage) Database.getBufferPool().getPage(tid, pid, null);
+            HeapPage page = (HeapPage) Database.getBufferPool().getPage(tid, pid, Permissions.READ_WRITE);
             // if empty, insert
             if (page.getNumEmptySlots() > 0) {
                 page.insertTuple(t);
@@ -133,7 +133,7 @@ public class HeapFile implements DbFile {
         // no pages, create new one and insert
         HeapPageId newPid = new HeapPageId(this.getId(), this.numPages());
         createNewPage(newPid);
-        HeapPage page = (HeapPage) Database.getBufferPool().getPage(tid, newPid, null);
+        HeapPage page = (HeapPage) Database.getBufferPool().getPage(tid, newPid, Permissions.READ_WRITE);
         page.insertTuple(t);
         modifiedPages.add(page);
 
@@ -151,7 +151,7 @@ public class HeapFile implements DbFile {
         if (rid == null)
             throw new DbException("tuple has null rid");
         PageId pid = rid.getPageId();
-        HeapPage page = (HeapPage) Database.getBufferPool().getPage(tid, pid, null);
+        HeapPage page = (HeapPage) Database.getBufferPool().getPage(tid, pid, Permissions.READ_WRITE);
         page.deleteTuple(t);
         modifiedPages.add(page);
         if (modifiedPages.isEmpty())
