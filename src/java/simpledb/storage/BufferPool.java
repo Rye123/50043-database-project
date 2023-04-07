@@ -12,6 +12,8 @@ import java.io.*;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * BufferPool manages the reading and writing of pages into memory from
@@ -45,7 +47,7 @@ public class BufferPool {
      */
     private ConcurrentHashMap<PageId, Page> pages;
     private ConcurrentHashMap<PageId, Integer> lastUsed;
-
+    private LockManager lockManager;
     /**
      * Max number of pages in buffer pool.
      */
@@ -60,6 +62,7 @@ public class BufferPool {
         this.pages = new ConcurrentHashMap<>();
         this.lastUsed = new ConcurrentHashMap<>();
         this.numPages = numPages;
+        this.lockManager = new LockManager();
         this.tick = 0;
     }
     
@@ -94,6 +97,12 @@ public class BufferPool {
      */
     public  Page getPage(TransactionId tid, PageId pid, Permissions perm)
     throws TransactionAbortedException, DbException {
+        if (perm == Permissions.READ_ONLY) {
+            lockManager.getReadLock(tid, pid);
+        } else if (perm == Permissions.READ_WRITE) {
+            lockManager.getWriteLock(tid, pid);
+        }
+        
         this.tick++;
         // Check if in buffer pool
         if (pages.containsKey(pid)) {
@@ -125,6 +134,11 @@ public class BufferPool {
     public  void unsafeReleasePage(TransactionId tid, PageId pid) {
         // some code goes here
         // not necessary for lab1|lab2
+        if (lockManager.hasReadLock(tid, pid))
+            lockManager.releaseReadLock(tid, pid);
+        
+        if (lockManager.hasWriteLock(tid, pid))
+            lockManager.releaseWriteLockExceptionless(tid, pid);
     }
 
     /**
@@ -139,9 +153,7 @@ public class BufferPool {
 
     /** Return true if the specified transaction has a lock on the specified page */
     public boolean holdsLock(TransactionId tid, PageId p) {
-        // some code goes here
-        // not necessary for lab1|lab2
-        return false;
+        return lockManager.hasWriteLock(tid, p);
     }
 
     /**
