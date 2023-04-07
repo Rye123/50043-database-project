@@ -275,6 +275,10 @@ public class BufferPool {
 
         // Get LRU Page
         for (PageId pid : this.pages.keySet()) {
+            Page thisPage = this.pages.get(pid);
+            if (thisPage.isDirty() != null) {           // If this page is dirty
+                continue;                               // Do not count this page
+            }
             int lastUsed = this.lastUsed.get(pid);
             if (lowestLastUsedVal > lastUsed) {
                 lowestLastUsedVal = lastUsed;
@@ -292,6 +296,12 @@ public class BufferPool {
             } catch (IOException e) {
                 throw new DbException("page could not be yeeted. y u bully me");
             }
+        }
+
+        try{
+            // TODO: Detect if there is a lock in the page
+        } catch (Exception e) {
+            throw new DbException("BufferPool.evictPage: the page is being used");
         }
 
         // YEET HIM OUT
