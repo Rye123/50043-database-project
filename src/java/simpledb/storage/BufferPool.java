@@ -1,6 +1,6 @@
 package simpledb.storage;
 
-import simpledb.common.Catalog; //TODO: Verify this part works
+import simpledb.common.Catalog;
 import simpledb.common.Database;
 import simpledb.common.Permissions;
 import simpledb.common.DbException;
@@ -57,7 +57,6 @@ public class BufferPool {
      * @param numPages maximum number of pages in this buffer pool.
      */
     public BufferPool(int numPages) {
-        // some code goes here
         this.pages = new ConcurrentHashMap<>();
         this.lastUsed = new ConcurrentHashMap<>();
         this.numPages = numPages;
@@ -221,7 +220,6 @@ public class BufferPool {
         for (PageId pid : pages.keySet()) {
             flushPage(pid);
         }
-
     }
 
     /** Remove the specific page id from the buffer pool.
