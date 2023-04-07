@@ -32,7 +32,7 @@ public class HeapFileIterator extends AbstractDbFileIterator {
         // Initialise curTupleIterator
         if (this.curPageNo < this.heapFile.numPages()) {
             HeapPageId curPageId = new HeapPageId(this.heapFile.getId(), curPageNo);
-            HeapPage curPage = (HeapPage) Database.getBufferPool().getPage(transactionId, curPageId, null);
+            HeapPage curPage = (HeapPage) Database.getBufferPool().getPage(transactionId, curPageId, Permissions.READ_ONLY);
             curTupleIterator = curPage.iterator();
         }
     }
@@ -67,7 +67,7 @@ public class HeapFileIterator extends AbstractDbFileIterator {
                 this.curPageNo++;
                 // we're now at any page from 0 to last page
                 HeapPageId curPageId = new HeapPageId(this.heapFile.getId(), curPageNo);
-                HeapPage curPage = (HeapPage) Database.getBufferPool().getPage(transactionId, curPageId, null);
+                HeapPage curPage = (HeapPage) Database.getBufferPool().getPage(transactionId, curPageId, Permissions.READ_ONLY);
                 curTupleIterator = curPage.iterator();
             } else {
                 // no more pages left -- we're at the last page
