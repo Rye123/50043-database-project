@@ -154,4 +154,12 @@ public class MyFirstLock {
             writeLocked.release();
         }
     }
+
+    public List<TransactionId> getReadLockHolders() {
+        return readLockHolders;
+    }
+
+    public TransactionId getWriteLockHolder() {
+        return writeLockHolder;
+    }
 }
