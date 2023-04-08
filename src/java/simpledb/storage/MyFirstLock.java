@@ -40,7 +40,7 @@ public class MyFirstLock {
         
         // loop through the readlockholders, ensure none of them wanna upgrade
         for (TransactionId readLockHolder : readLockHolders) {
-            if (readLockHolder == tid) // well of course I know him, he's me
+            if (readLockHolder.equals(tid)) // well of course I know him, he's me
                 continue;
             
             if (!readLockHoldersWaitingToUpgrade.contains(readLockHolder)) {
