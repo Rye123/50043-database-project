@@ -15,6 +15,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import javax.swing.plaf.TreeUI;
+
 /**
  * BufferPool manages the reading and writing of pages into memory from
  * disk. Access methods call into it to retrieve pages, and it fetches
@@ -149,6 +151,7 @@ public class BufferPool {
     public void transactionComplete(TransactionId tid) {
         // some code goes here
         // not necessary for lab1|lab2
+        transactionComplete(tid, true);         // Just commit directly
     }
 
     /** Return true if the specified transaction has a lock on the specified page */
@@ -166,6 +169,19 @@ public class BufferPool {
     public void transactionComplete(TransactionId tid, boolean commit) {
         // some code goes here
         // not necessary for lab1|lab2
+        switch (commit) {
+            case true:
+            // Flush dirty pages associated to the disk
+            
+                break;
+
+            case false:
+
+                // Restore the page to on-disk state
+                break;
+        }
+
+        // release any locks acquired 
     }
 
     /**
@@ -312,6 +328,7 @@ public class BufferPool {
         // YEET HIM OUT
         this.pages.remove(lruPid);
         this.lastUsed.remove(lruPid);
+        // TODO: add this part into a critical section
     }
 
 }

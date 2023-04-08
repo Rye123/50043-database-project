@@ -110,4 +110,14 @@ public class LockManager {
         writeLockHolders.remove(pid);
         pageLocks.get(pid).asWriteLock().unlock();
     }
+
+    
+    public boolean removeLockforPage(PageId pid) {
+        if (writeLockHolders.get(pid) != null && readLockHolders.get(pid) != null) {
+            return false;
+        }
+
+        ensurePageUninitialized(pid);
+        return true;
+    }
 }
