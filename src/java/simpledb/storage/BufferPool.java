@@ -192,16 +192,7 @@ public class BufferPool {
         }
 
         // release any locks acquired by this transaction id
-        for (PageId page: dirtyPages) {
-            if (lockManager.hasReadLock(tid, page)){ 
-                lockManager.releaseReadLock(tid, page);
-            }
-
-            if (lockManager.hasWriteLock(tid, page)){
-                lockManager.releaseWriteLockExceptionless(tid, page);
-            }
-        }
-
+        lockManager.releaseLocks(tid);
     }
 
     /**
@@ -341,7 +332,7 @@ public class BufferPool {
         }
 
         // Detect if there is a lock in the page
-        if (!lockManager.removeLockforPage(lruPid)) {
+        if (!lockManager.checkIfPageLocked(lruPid)) {
             throw new DbException("BufferPool.evictPage: the page is being used");
         }
 
