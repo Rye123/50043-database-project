@@ -300,6 +300,17 @@ public class BufferPool {
     public synchronized  void flushPages(TransactionId tid) throws IOException {
         // some code goes here
         // not necessary for lab1|lab2
+        // Find all pages that has transactions belonginig to this tid
+        ArrayList<PageId> dirtyPages = new ArrayList<>();
+        // Filter through all the pages with affected 
+        for (Page page: pages.values()){
+            if (page.isDirty() == tid) {
+                dirtyPages.add(page.getId());
+            }
+        }
+        for (PageId page: dirtyPages) {
+            flushPage(page);
+        }
     }
 
     /**
@@ -333,7 +344,9 @@ public class BufferPool {
 
         // Detect if there is a lock in the page
         if (!lockManager.checkIfPageLocked(lruPid)) {
-            throw new DbException("BufferPool.evictPage: the page is being used");
+            // throw new DbException("BufferPool.evictPage: the page is being used");
+            // I will just release the page then
+            lockManager.releaseReadLock(null, lruPid);
         }
 
         // YEET HIM OUT

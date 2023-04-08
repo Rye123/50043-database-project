@@ -33,7 +33,7 @@ class LockGraph {
             waitFor.get(tid).remove(lock);
     }
 
-    private boolean dfsVisit(TransactionId node, List<TransactionId> visited) {
+    private synchronized boolean dfsVisit(TransactionId node, List<TransactionId> visited) {
         if (visited.contains(node))
             return false;
         visited.add(node);
@@ -116,7 +116,7 @@ public class LockManager {
         return pageLocks.get(pid).holdsWriteLock(tid);
     }
 
-    public void getReadLock(TransactionId tid, PageId pid) throws TransactionAbortedException {
+    public synchronized void getReadLock(TransactionId tid, PageId pid) throws TransactionAbortedException {
         ensurePageInitialised(pid);
         MyFirstLock lock = pageLocks.get(pid);
         // if page is write locked, add self to the waitlist
@@ -140,7 +140,7 @@ public class LockManager {
         pageLocks.get(pid).releaseReadLock(tid);
     }
 
-    public void getWriteLock(TransactionId tid, PageId pid) throws TransactionAbortedException {
+    public synchronized void getWriteLock(TransactionId tid, PageId pid) throws TransactionAbortedException {
         ensurePageInitialised(pid);
 
         // if page is readlocked (or writelocked), add self to waitlist
