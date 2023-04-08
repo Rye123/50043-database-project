@@ -27,3 +27,6 @@ bin/
 
 # MacOS folder attribute files
 .DS_Store
+
+# Visual Studio Code local files
+.vscode/

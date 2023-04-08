@@ -9,6 +9,7 @@ import simpledb.transaction.TransactionAbortedException;
 import simpledb.transaction.TransactionId;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -148,7 +149,7 @@ public class BufferPool {
      *
      * @param tid the ID of the transaction requesting the unlock
      */
-    public void transactionComplete(TransactionId tid) {
+    public void transactionComplete(TransactionId tid) throws IOException{
         // some code goes here
         // not necessary for lab1|lab2
         transactionComplete(tid, true);         // Just commit directly
@@ -166,22 +167,41 @@ public class BufferPool {
      * @param tid the ID of the transaction requesting the unlock
      * @param commit a flag indicating whether we should commit or abort
      */
-    public void transactionComplete(TransactionId tid, boolean commit) {
+    public void transactionComplete(TransactionId tid, boolean commit) throws IOException {
         // some code goes here
         // not necessary for lab1|lab2
-        switch (commit) {
-            case true:
+        ArrayList<PageId> dirtyPages = new ArrayList<>();
+        // Filter through all the pages with affected 
+        for (Page page: pages.values()){
+            if (page.isDirty() == tid) {
+                dirtyPages.add(page.getId());
+            }
+        }
+        
+        if (commit) {
             // Flush dirty pages associated to the disk
-            
-                break;
+            for (PageId page: dirtyPages) {
+                flushPage(page);
+            }
 
-            case false:
-
-                // Restore the page to on-disk state
-                break;
+        } else {
+            // Restore the page to on-disk state
+            for (PageId page: dirtyPages) {
+                discardPage(page);
+            }
         }
 
-        // release any locks acquired 
+        // release any locks acquired by this transaction id
+        for (PageId page: dirtyPages) {
+            if (lockManager.hasReadLock(tid, page)){ 
+                lockManager.releaseReadLock(tid, page);
+            }
+
+            if (lockManager.hasWriteLock(tid, page)){
+                lockManager.releaseWriteLockExceptionless(tid, page);
+            }
+        }
+
     }
 
     /**
