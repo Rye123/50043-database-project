@@ -27,6 +27,12 @@ public class LockManager {
         }
     }
 
+    private void ensurePageUninitialized(PageId pid) {
+        if (pageLocks.containsKey(pid)) {
+            pageLocks.remove(pid);
+        }
+    }
+
     private boolean hasOtherReaders(TransactionId tid, PageId pid) {
         for (TransactionId otherTid : readLockHolders.get(pid)) {
             if (!otherTid.equals(tid))

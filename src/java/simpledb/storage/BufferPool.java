@@ -300,17 +300,12 @@ public class BufferPool {
 
         Page lruPage = this.pages.get(lruPid);
         if (lruPage.isDirty() != null) {
-            // page is dirty, flush first
-            try {
-                this.flushPage(lruPid);
-            } catch (IOException e) {
-                throw new DbException("page could not be yeeted. y u bully me");
-            }
+            // page is dirty, we cannot flush this page
+            throw new DbException("page could not be yeeted. y u bully me");
         }
 
-        try{
-            // TODO: Detect if there is a lock in the page
-        } catch (Exception e) {
+        // Detect if there is a lock in the page
+        if (!lockManager.removeLockforPage(lruPid)) {
             throw new DbException("BufferPool.evictPage: the page is being used");
         }
 
