@@ -1,9 +1,6 @@
 package simpledb.storage;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.StampedLock;
 
 import simpledb.transaction.TransactionAbortedException;
 import simpledb.transaction.TransactionId;
@@ -20,14 +17,6 @@ public class LockManager {
             pageLocks.put(pid, new MyFirstLock());
         }
     }
-
-    // private boolean hasOtherReaders(TransactionId tid, PageId pid) {
-    //     for (TransactionId otherTid : readLockHolders.get(pid)) {
-    //         if (!otherTid.equals(tid))
-    //             return true;
-    //     }
-    //     return false;
-    // }
 
     public boolean hasReadLock(TransactionId tid, PageId pid) {
         ensurePageInitialised(pid);
@@ -70,4 +59,17 @@ public class LockManager {
         ensurePageInitialised(pid);
         pageLocks.get(pid).releaseWriteLock(tid);
     }
+
+    /**
+     * Releases all locks associated with transaction `tid`.
+     * @param tid
+     */
+    public void releaseLocks(TransactionId tid) {
+        for (MyFirstLock pageLock : pageLocks.values()) {
+            if (pageLock.holdsReadLock(tid))
+                pageLock.releaseReadLock(tid);
+            if (pageLock.holdsWriteLock(tid))
+                pageLock.releaseWriteLock(tid);
+        }
+    } 
 }
