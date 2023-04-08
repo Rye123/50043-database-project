@@ -149,6 +149,7 @@ public class BufferPool {
     public void transactionComplete(TransactionId tid) {
         // some code goes here
         // not necessary for lab1|lab2
+        lockManager.releaseLocks(tid);
     }
 
     /** Return true if the specified transaction has a lock on the specified page */
@@ -166,6 +167,7 @@ public class BufferPool {
     public void transactionComplete(TransactionId tid, boolean commit) {
         // some code goes here
         // not necessary for lab1|lab2
+        lockManager.releaseLocks(tid);
     }
 
     /**
