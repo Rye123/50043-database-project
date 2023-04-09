@@ -122,13 +122,15 @@ public class HeapFile implements DbFile {
         ArrayList<Page> modifiedPages = new ArrayList<>();
         for (int i = 0; i < this.numPages(); i++) {
             PageId pid = new HeapPageId(this.getId(), i);
-            HeapPage page = (HeapPage) Database.getBufferPool().getPage(tid, pid, Permissions.READ_WRITE);
+            HeapPage page = (HeapPage) Database.getBufferPool().getPage(tid, pid, Permissions.READ_ONLY);
             // if empty, insert
             if (page.getNumEmptySlots() > 0) {
+                page = (HeapPage) Database.getBufferPool().getPage(tid, pid, Permissions.READ_WRITE); // escalate perms
                 page.insertTuple(t);
                 modifiedPages.add(page);
-                return modifiedPages;
+                return modifiedPages; // here we expect the lock to be released by the caller later.
             }
+            Database.getBufferPool().unsafeReleasePage(tid, pid); // if nothing was inserted, we can safely release the lock
         }
         // no pages, create new one and insert
         HeapPageId newPid = new HeapPageId(this.getId(), this.numPages());
