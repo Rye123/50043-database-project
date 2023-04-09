@@ -192,24 +192,11 @@ public class LockManager {
         }
     } 
 
-    /**
-     * Return if there is any locks on the page, and if not locked, remove the lock from the pageLocks hashmap
-     * @param pid Page Id of the page to be checked
-     * @return If there is a lock on the page
-    */
-    public synchronized boolean checkIfPageLocked(PageId pid) {
-        MyFirstLock lock = pageLocks.get(pid);
+    public boolean isReadLocked(PageId pid) {
+        return pageLocks.get(pid).isReadLocked();
+    }
 
-        if (lock == null) {
-            return false;
-        }
-
-        if (lock.isReadLocked()){
-            return false;
-        } else {
-            pageLocks.remove(pid);
-            return true;
-        }
-        
+    public boolean isWriteLocked(PageId pid) {
+        return pageLocks.get(pid).isWriteLocked();
     }
 }
