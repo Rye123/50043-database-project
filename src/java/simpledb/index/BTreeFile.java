@@ -667,11 +667,41 @@ public class BTreeFile implements DbFile {
 	 */
 	public void stealFromLeafPage(BTreeLeafPage page, BTreeLeafPage sibling,
 			BTreeInternalPage parent, BTreeEntry entry, boolean isRightSibling) throws DbException {
-		// some code goes here
-        //
-        // Move some of the tuples from the sibling to the page so
-		// that the tuples are evenly distributed. Be sure to update
-		// the corresponding parent entry.
+
+		// Check if sibling has tuples to spare
+		if (sibling.getNumTuples() < sibling.getMaxTuples()/2) {
+			//TODO
+			// merge
+			throw new RuntimeException("why u call me");
+		}
+
+		int fairAllotment = (sibling.getNumTuples() + page.getNumTuples()) / 2;
+
+		int numberOfTuplesToShift = fairAllotment - page.getNumTuples();
+		assert numberOfTuplesToShift > 0; // page should not be already half full.
+		
+		Iterator<Tuple> iter = null;
+		if (isRightSibling) // we want to shift tuples from right sibling to the left
+			iter = sibling.iterator();
+		else				// we want to shift tuples from left sibling to the right
+			iter = sibling.reverseIterator();
+
+		for (int i = 0; i < numberOfTuplesToShift; i++) {
+			Tuple toShift = iter.next();
+			sibling.deleteTuple(toShift);
+			page.insertTuple(toShift);
+		}
+
+		// Get middle field
+		Field middleField = null;
+		if (isRightSibling)
+			middleField = sibling.iterator().next().getField(keyField());
+		else
+			middleField = page.iterator().next().getField(keyField());
+		
+		// Update the parent entry
+		entry.setKey(middleField);
+		parent.updateEntry(entry);
 	}
 
 	/**
@@ -751,6 +781,46 @@ public class BTreeFile implements DbFile {
 		// that the entries are evenly distributed. Be sure to update
 		// the corresponding parent entry. Be sure to update the parent
 		// pointers of all children in the entries that were moved.
+
+		// Check if sibling has entries to spare
+		if (leftSibling.getNumEntries() < leftSibling.getMaxEntries()/2) {
+			//TODO
+			//merge
+			throw new RuntimeException("why u call me what i do siah");
+		}
+
+		int fairAllotment = (leftSibling.getNumEntries() + page.getNumEntries()) / 2;
+
+		int numberOfEntriesToShift = fairAllotment - page.getNumEntries();
+		assert numberOfEntriesToShift > 0;
+
+		Iterator<BTreeEntry> iter = leftSibling.reverseIterator();
+		for (int i = 0; i < numberOfEntriesToShift; i++) {
+			// Get leftmost entry from page
+			BTreeEntry originalLeftmostEntry = page.iterator().next();
+
+			// Pull down parent entry to the right
+			parent.deleteKeyAndLeftChild(parentEntry);
+
+			// Pull up rightmost entry from the left sibling
+			BTreeEntry newParentEntry = iter.next();
+			leftSibling.deleteKeyAndRightChild(newParentEntry);
+
+			//// Update parentEntry's children
+			parentEntry.setLeftChild(newParentEntry.getRightChild());
+			parentEntry.setRightChild(originalLeftmostEntry.getLeftChild());
+			page.insertEntry(parentEntry);
+
+			//// Update newParentEntry's children
+			newParentEntry.setLeftChild(leftSibling.getId());
+			newParentEntry.setRightChild(page.getId());
+			parent.insertEntry(newParentEntry);
+			parentEntry = newParentEntry;
+			
+			updateParentPointers(tid, dirtypages, leftSibling);
+			updateParentPointers(tid, dirtypages, page);
+			updateParentPointers(tid, dirtypages, parent);
+		}
 	}
 	
 	/**
@@ -778,6 +848,46 @@ public class BTreeFile implements DbFile {
 		// that the entries are evenly distributed. Be sure to update
 		// the corresponding parent entry. Be sure to update the parent
 		// pointers of all children in the entries that were moved.
+
+		// Check if sibling has entries to spare
+		if (rightSibling.getNumEntries() < rightSibling.getMaxEntries()/2) {
+			//TODO
+			//merge
+			throw new RuntimeException("why u call me what i do siah");
+		}
+
+		int fairAllotment = (rightSibling.getNumEntries() + page.getNumEntries()) / 2;
+
+		int numberOfEntriesToShift = fairAllotment - page.getNumEntries();
+		assert numberOfEntriesToShift > 0;
+
+		Iterator<BTreeEntry> iter = rightSibling.iterator();
+		for (int i = 0; i < numberOfEntriesToShift; i++) {
+			// Get rightmost entry from page
+			BTreeEntry originalRightmostEntry = page.reverseIterator().next();
+
+			// Pull down parent entry to the left
+			parent.deleteKeyAndRightChild(parentEntry);
+
+			// Pull up leftmost entry from the right sibling
+			BTreeEntry newParentEntry = iter.next();
+			rightSibling.deleteKeyAndLeftChild(newParentEntry);
+
+			//// Update parentEntry's children
+			parentEntry.setLeftChild(originalRightmostEntry.getRightChild());
+			parentEntry.setRightChild(newParentEntry.getLeftChild());
+			page.insertEntry(parentEntry);
+
+			//// Update newParentEntry's children
+			newParentEntry.setLeftChild(page.getId());
+			newParentEntry.setRightChild(rightSibling.getId());
+			parent.insertEntry(newParentEntry);
+			parentEntry = newParentEntry;
+			
+			updateParentPointers(tid, dirtypages, parent);
+			updateParentPointers(tid, dirtypages, page);
+			updateParentPointers(tid, dirtypages, rightSibling);
+		}
 	}
 	
 	/**
