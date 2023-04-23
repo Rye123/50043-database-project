@@ -187,7 +187,40 @@ public class BTreeFile implements DbFile {
 	private BTreeLeafPage findLeafPage(TransactionId tid, Map<PageId, Page> dirtypages, BTreePageId pid, Permissions perm,
                                        Field f)
 					throws DbException, TransactionAbortedException {
-		// some code goes here
+		if (pid.pgcateg() == BTreePageId.LEAF) {
+			// base case: fetch with given permissions.
+			return (BTreeLeafPage) getPage(tid, dirtypages, pid, perm);
+		}
+
+		// otherwise, the given pid is an internal page.
+
+		// Iterate through entries in internal page, compare entry value to f
+		BTreeInternalPage page = (BTreeInternalPage) getPage(tid, dirtypages, pid, Permissions.READ_ONLY);
+		Iterator<BTreeEntry> iter = page.iterator();
+		while (iter.hasNext()) {
+			BTreeEntry entry = iter.next();
+			Field entryField = entry.getKey();
+			BTreePageId leftPageId = entry.getLeftChild();
+			BTreePageId rightPageId = entry.getRightChild();
+
+			if (f == null) {
+				// recurse on the leftmost child
+				// this will automatically be on the very first entry
+				return findLeafPage(tid, dirtypages, leftPageId, perm, f);
+			}
+
+			if (f.compare(Op.LESS_THAN_OR_EQ, entryField)) {
+				// if f < the key, go down that path
+				return findLeafPage(tid, dirtypages, leftPageId, perm, f);
+			} else {
+				// otherwise, we only go down to the right if this is the last iter
+				// this is because the next entry could be more specific
+				if (!iter.hasNext())
+					return findLeafPage(tid, dirtypages, rightPageId, perm, f);
+			}
+		}
+
+		// should not reach this point.
         return null;
 	}
 	
