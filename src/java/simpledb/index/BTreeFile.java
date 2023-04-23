@@ -670,8 +670,6 @@ public class BTreeFile implements DbFile {
 
 		// Check if sibling has tuples to spare
 		if (sibling.getNumTuples() < sibling.getMaxTuples()/2) {
-			//TODO
-			// merge
 			throw new RuntimeException("why u call me");
 		}
 
@@ -776,16 +774,9 @@ public class BTreeFile implements DbFile {
 	public void stealFromLeftInternalPage(TransactionId tid, Map<PageId, Page> dirtypages,
 			BTreeInternalPage page, BTreeInternalPage leftSibling, BTreeInternalPage parent,
 			BTreeEntry parentEntry) throws DbException, TransactionAbortedException {
-		// some code goes here
-        // Move some of the entries from the left sibling to the page so
-		// that the entries are evenly distributed. Be sure to update
-		// the corresponding parent entry. Be sure to update the parent
-		// pointers of all children in the entries that were moved.
 
 		// Check if sibling has entries to spare
 		if (leftSibling.getNumEntries() < leftSibling.getMaxEntries()/2) {
-			//TODO
-			//merge
 			throw new RuntimeException("why u call me what i do siah");
 		}
 
@@ -843,11 +834,6 @@ public class BTreeFile implements DbFile {
 	public void stealFromRightInternalPage(TransactionId tid, Map<PageId, Page> dirtypages,
 			BTreeInternalPage page, BTreeInternalPage rightSibling, BTreeInternalPage parent,
 			BTreeEntry parentEntry) throws DbException, TransactionAbortedException {
-		// some code goes here
-        // Move some of the entries from the right sibling to the page so
-		// that the entries are evenly distributed. Be sure to update
-		// the corresponding parent entry. Be sure to update the parent
-		// pointers of all children in the entries that were moved.
 
 		// Check if sibling has entries to spare
 		if (rightSibling.getNumEntries() < rightSibling.getMaxEntries()/2) {
@@ -911,13 +897,6 @@ public class BTreeFile implements DbFile {
 	public void mergeLeafPages(TransactionId tid, Map<PageId, Page> dirtypages,
 			BTreeLeafPage leftPage, BTreeLeafPage rightPage, BTreeInternalPage parent, BTreeEntry parentEntry) 
 					throws DbException, IOException, TransactionAbortedException {
-
-		// some code goes here
-		//
-		// Move all the tuples from the right page to the left page, update
-		// the sibling pointers, and make the right page available for reuse.
-		// Delete the entry in the parent corresponding to the two pages that are merging -
-		// deleteParentEntry() will be useful here
 		
 		// Get the right sibling id of the right page
 		// Which will be the right sibling for the left page later
@@ -942,7 +921,7 @@ public class BTreeFile implements DbFile {
 			leftPage.insertTuple(currenTuple);
 		}
 		// Remove the parent entry of the right page
-		deleteParentEntry(tid, dirtypages, rightPage, parent, parentEntry);
+		deleteParentEntry(tid, dirtypages, leftPage, parent, parentEntry);
 		// Clear the right page for reuse
 		setEmptyPage(tid, dirtypages, rightPage.getId().getPageNumber());
 	}
@@ -970,14 +949,6 @@ public class BTreeFile implements DbFile {
 	public void mergeInternalPages(TransactionId tid, Map<PageId, Page> dirtypages,
 			BTreeInternalPage leftPage, BTreeInternalPage rightPage, BTreeInternalPage parent, BTreeEntry parentEntry) 
 					throws DbException, IOException, TransactionAbortedException {
-		
-		// some code goes here
-        //
-        // Move all the entries from the right page to the left page, update
-		// the parent pointers of the children in the entries that were moved, 
-		// and make the right page available for reuse
-		// Delete the entry in the parent corresponding to the two pages that are merging -
-		// deleteParentEntry() will be useful here
 
 		// Insert the left most Page id of the child page
 		BTreePageId rightPageFirstChildId = rightPage.iterator().next().getLeftChild();
@@ -1003,7 +974,7 @@ public class BTreeFile implements DbFile {
 		// Update reference of the left page
 		updateParentPointers(tid, dirtypages, leftPage);
 		// Remove the entry of the removed right page
-		deleteParentEntry(tid, dirtypages, rightPage, parent, parentEntry);
+		deleteParentEntry(tid, dirtypages, leftPage, parent, parentEntry);
 		// cleanup
 		setEmptyPage(tid, dirtypages, rightPage.getId().getPageNumber());
 	}
