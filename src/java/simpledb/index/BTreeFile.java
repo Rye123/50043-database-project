@@ -931,6 +931,7 @@ public class BTreeFile implements DbFile {
 			);
 			rightSibling.setLeftSiblingId(leftPage.getId());
 		}
+		leftPage.setRightSiblingId(rightSiblingId);
 
 		// Iterate through all Tuples from the right page
 		Iterator<Tuple> pageIterator = rightPage.iterator();
@@ -940,7 +941,10 @@ public class BTreeFile implements DbFile {
 			rightPage.deleteTuple(currenTuple);
 			leftPage.insertTuple(currenTuple);
 		}
-
+		// Remove the parent entry of the right page
+		deleteParentEntry(tid, dirtypages, rightPage, parent, parentEntry);
+		// Clear the right page for reuse
+		setEmptyPage(tid, dirtypages, rightPage.getId().getPageNumber());
 	}
 
 	/**
